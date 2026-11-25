@@ -14,6 +14,7 @@
       user-select: none;
       -webkit-user-select: none;
       -webkit-touch-callout: none;
+      -webkit-tap-highlight-color: transparent;
     }
     html, body {
       margin: 0;
@@ -46,32 +47,55 @@
       font-variant-numeric: tabular-nums;
     }
     .glass-hud {
-      background: rgba(8, 11, 18, 0.72);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
+      background: rgba(8, 11, 18, 0.58);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
       border: 1px solid rgba(255, 255, 255, 0.09);
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.65);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
     }
+
+    /* Safe-area aware HUD & Touch zones for notched / punch-hole phones */
+    .safe-top-hud {
+      top: max(0.5rem, env(safe-area-inset-top));
+      left: max(0.65rem, env(safe-area-inset-left));
+      right: max(0.65rem, env(safe-area-inset-right));
+    }
+    @media (min-width: 768px) {
+      .safe-top-hud {
+        top: 1rem;
+        left: 1.25rem;
+        right: 1.25rem;
+      }
+    }
+    .safe-bottom-controls {
+      bottom: max(0.55rem, env(safe-area-inset-bottom));
+      left: max(0.75rem, env(safe-area-inset-left));
+      right: max(0.75rem, env(safe-area-inset-right));
+    }
+
+    /* Standard Mobile Racing Touch Controls: Translucent, compact, non-obstructive */
     .touch-btn {
-      background: rgba(12, 16, 26, 0.68);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
+      background: rgba(10, 14, 24, 0.36);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
       border: 1px solid rgba(255, 255, 255, 0.16);
-      transition: transform 0.08s ease, background-color 0.1s ease, border-color 0.1s ease;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.42);
+      transition: transform 0.07s ease, background-color 0.08s ease, border-color 0.08s ease, opacity 0.08s ease;
     }
     .touch-btn:active, .touch-btn.active {
-      transform: scale(0.93);
-      background: rgba(56, 189, 248, 0.28);
-      border-color: rgba(56, 189, 248, 0.7);
+      transform: scale(0.92);
+      background: rgba(56, 189, 248, 0.32);
+      border-color: rgba(56, 189, 248, 0.78);
     }
     .touch-btn-brake:active, .touch-btn-brake.active {
-      background: rgba(244, 63, 94, 0.32);
-      border-color: rgba(244, 63, 94, 0.8);
+      background: rgba(244, 63, 94, 0.34);
+      border-color: rgba(244, 63, 94, 0.82);
     }
     .touch-btn-horn:active, .touch-btn-horn.active {
-      background: rgba(251, 191, 36, 0.28);
-      border-color: rgba(251, 191, 36, 0.75);
+      background: rgba(251, 191, 36, 0.32);
+      border-color: rgba(251, 191, 36, 0.82);
     }
+
     @keyframes pulsePop {
       0% { transform: translate(-50%, 8px) scale(0.88); opacity: 0; }
       20% { transform: translate(-50%, 0px) scale(1.04); opacity: 1; }
@@ -103,39 +127,39 @@
   <div id="canvas-container"></div>
   <div id="crash-flash" class="fixed inset-0 z-30 pointer-events-none opacity-0 bg-rose-600/60"></div>
 
-  <!-- Minimalist Top HUD (Unobtrusive) -->
-  <div id="hud-top" class="fixed top-3 left-3 right-3 sm:top-4 sm:left-5 sm:right-5 z-20 flex items-start justify-between pointer-events-none gap-2">
+  <!-- Minimalist Top HUD (Compact on Mobile Landscape, Full on Desktop) -->
+  <div id="hud-top" class="fixed safe-top-hud z-20 flex items-start justify-between pointer-events-none gap-2">
     <!-- Left Telemetry & Borderless Car Audio Icon Strip -->
-    <div class="flex flex-col items-start gap-1.5 pointer-events-none">
-      <div class="glass-hud rounded-2xl px-3.5 py-2 sm:px-4 sm:py-2.5 flex items-center gap-3 sm:gap-5 pointer-events-auto">
+    <div class="flex flex-col items-start gap-1 pointer-events-none">
+      <div class="glass-hud rounded-xl md:rounded-2xl px-2.5 py-1 md:px-4 md:py-2.5 flex items-center gap-2.5 md:gap-5 pointer-events-auto">
         <div>
-          <div class="text-[9px] sm:text-[10px] font-semibold uppercase tracking-widest text-slate-400">Score</div>
-          <div id="hud-score" class="font-mono-num text-base sm:text-xl font-extrabold text-white tracking-tight">0</div>
+          <div class="text-[8px] md:text-[10px] font-semibold uppercase tracking-widest text-slate-400 leading-none mb-0.5">Score</div>
+          <div id="hud-score" class="font-mono-num text-xs md:text-xl font-extrabold text-white tracking-tight leading-none">0</div>
         </div>
-        <div class="h-6 w-px bg-white/10"></div>
+        <div class="h-4 md:h-6 w-px bg-white/10"></div>
         <div>
-          <div class="text-[9px] sm:text-[10px] font-semibold uppercase tracking-widest text-slate-400">Combo</div>
-          <div id="hud-combo" class="font-mono-num text-base sm:text-xl font-extrabold text-sky-400">1.0x</div>
+          <div class="text-[8px] md:text-[10px] font-semibold uppercase tracking-widest text-slate-400 leading-none mb-0.5">Combo</div>
+          <div id="hud-combo" class="font-mono-num text-xs md:text-xl font-extrabold text-sky-400 leading-none">1.0x</div>
         </div>
-        <div class="h-6 w-px bg-white/10 hidden sm:block"></div>
+        <div class="h-4 md:h-6 w-px bg-white/10 hidden sm:block"></div>
         <div class="hidden sm:block">
-          <div class="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Distance</div>
-          <div id="hud-distance" class="font-mono-num text-xl font-bold text-slate-200">0.00 <span class="text-xs font-normal text-slate-400">km</span></div>
+          <div class="text-[8px] md:text-[10px] font-semibold uppercase tracking-widest text-slate-400 leading-none mb-0.5">Distance</div>
+          <div id="hud-distance" class="font-mono-num text-xs md:text-xl font-bold text-slate-200 leading-none">0.00 <span class="text-[10px] md:text-xs font-normal text-slate-400">km</span></div>
         </div>
       </div>
 
       <!-- Borderless Minimalist Car Audio Icons (Speaker Toggle + < || >) -->
-      <div id="hud-audio-strip" class="flex items-center gap-2.5 pl-1.5 pointer-events-auto">
+      <div id="hud-audio-strip" class="flex items-center gap-1.5 md:gap-2.5 pl-1 pointer-events-auto">
         <button id="btn-audio-toggle" type="button" title="Toggle Car Audio On/Off"
           class="p-1 text-slate-400 hover:text-white transition transform active:scale-90 cursor-pointer drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">
           <!-- Speaker Off SVG (default) -->
-          <svg id="icon-audio-off" class="w-4 h-4 sm:w-5 sm:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+          <svg id="icon-audio-off" class="w-3.5 h-3.5 md:w-5 md:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
             <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
             <line x1="23" y1="9" x2="17" y2="15"/>
             <line x1="17" y1="9" x2="23" y2="15"/>
           </svg>
           <!-- Speaker On SVG -->
-          <svg id="icon-audio-on" class="w-4 h-4 sm:w-5 sm:h-5 hidden text-sky-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+          <svg id="icon-audio-on" class="w-3.5 h-3.5 md:w-5 md:h-5 hidden text-sky-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
             <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
             <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
             <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
@@ -143,10 +167,10 @@
         </button>
 
         <!-- Transport Controls (<  ||/>  >) visible when Audio is ON -->
-        <div id="audio-transport-icons" class="hidden items-center gap-2">
+        <div id="audio-transport-icons" class="hidden items-center gap-1.5 md:gap-2">
           <button id="btn-audio-prev" type="button" title="Previous Track"
             class="p-1 text-slate-200 hover:text-sky-300 transition transform active:scale-90 cursor-pointer drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">
-            <svg class="w-4 h-4 sm:w-4.5 sm:h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <svg class="w-3.5 h-3.5 md:w-4.5 md:h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="15 18 9 12 15 6"/>
             </svg>
           </button>
@@ -154,72 +178,73 @@
           <button id="btn-audio-playpause" type="button" title="Pause / Resume Track"
             class="p-1 text-slate-200 hover:text-sky-300 transition transform active:scale-90 cursor-pointer drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">
             <!-- Pause Icon (||) -->
-            <svg id="icon-track-pause" class="w-4 h-4 sm:w-4.5 sm:h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <svg id="icon-track-pause" class="w-3.5 h-3.5 md:w-4.5 md:h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
               <line x1="9" y1="6" x2="9" y2="18"/>
               <line x1="15" y1="6" x2="15" y2="18"/>
             </svg>
             <!-- Play Icon (>) -->
-            <svg id="icon-track-play" class="w-4 h-4 sm:w-4.5 sm:h-4.5 hidden text-amber-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <svg id="icon-track-play" class="w-3.5 h-3.5 md:w-4.5 md:h-4.5 hidden text-amber-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
               <polygon points="7 5 19 12 7 19 7 5"/>
             </svg>
           </button>
 
           <button id="btn-audio-next" type="button" title="Next Track"
             class="p-1 text-slate-200 hover:text-sky-300 transition transform active:scale-90 cursor-pointer drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">
-            <svg class="w-4 h-4 sm:w-4.5 sm:h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <svg class="w-3.5 h-3.5 md:w-4.5 md:h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="9 18 15 12 9 6"/>
             </svg>
           </button>
 
-          <span id="hud-track-name" class="font-mono-num text-[10px] sm:text-[11px] font-medium text-slate-300/90 max-w-[115px] sm:max-w-[175px] truncate drop-shadow-[0_2px_6px_rgba(0,0,0,0.95)]"></span>
+          <span id="hud-track-name" class="font-mono-num text-[9px] md:text-[11px] font-medium text-slate-300/90 max-w-[90px] md:max-w-[175px] truncate drop-shadow-[0_2px_6px_rgba(0,0,0,0.95)]"></span>
         </div>
       </div>
     </div>
 
     <!-- Center Dynamic Event Toast -->
-    <div id="toast-container" class="fixed top-16 sm:top-20 left-1/2 -translate-x-1/2 z-30 pointer-events-none"></div>
+    <div id="toast-container" class="fixed top-12 md:top-20 left-1/2 -translate-x-1/2 z-30 pointer-events-none"></div>
 
-    <!-- Right Controls: Horn [H], High-Beams [F], Wipers [V], Fullscreen, Settings -->
-    <div class="glass-hud rounded-2xl px-2 py-1.5 sm:px-3 sm:py-2 flex items-center gap-1.5 sm:gap-2 pointer-events-auto">
+    <!-- Right Controls: Compact Icon Pills on Mobile, Labeled Buttons on Desktop -->
+    <div class="glass-hud rounded-xl md:rounded-2xl p-1 md:px-3 md:py-2 flex items-center gap-1 md:gap-2 pointer-events-auto">
+      <!-- Desktop-only Horn button (Mobile uses dedicated thumb-zone Horn near right pedals) -->
       <button id="btn-horn" type="button" title="Horn + Dipper Flash (H)"
-        class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/35 text-xs font-semibold text-amber-200 transition cursor-pointer">
+        class="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/35 text-xs font-semibold text-amber-200 transition cursor-pointer">
         <svg class="w-4 h-4 text-amber-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M11 5L6 9H2v6h4l5 4V5z"/>
           <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
           <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
         </svg>
-        <span class="hidden md:inline">Horn</span>
+        <span>Horn</span>
         <span class="font-mono-num text-[10px] text-amber-300/90">[H]</span>
       </button>
 
       <button id="btn-lights" type="button" title="Toggle High-Beam Flash (F)"
-        class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium text-slate-200 transition cursor-pointer">
+        class="w-8 h-8 md:w-auto md:h-auto flex items-center justify-center md:gap-1.5 md:px-2.5 md:py-1.5 rounded-lg md:rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium text-slate-200 transition cursor-pointer active:scale-90">
         <svg id="icon-lights" class="w-4 h-4 text-sky-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M9 18h6M10 22h4M12 2v2M4.93 4.93l1.41 1.41M2 12h2M20 12h2M17.66 6.34l1.41-1.41M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
         </svg>
         <span class="hidden md:inline">Beam</span>
-        <span id="label-lights" class="font-mono-num text-[10px] sm:text-xs font-bold text-sky-300">LOW [F]</span>
+        <span id="label-lights" class="hidden md:inline font-mono-num text-xs font-bold text-sky-300">LOW [F]</span>
       </button>
 
       <button id="btn-wipers" type="button" title="Toggle Wipers (V)"
-        class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium text-slate-200 transition cursor-pointer">
+        class="w-8 h-8 md:w-auto md:h-auto flex items-center justify-center md:gap-1.5 md:px-2.5 md:py-1.5 rounded-lg md:rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium text-slate-200 transition cursor-pointer active:scale-90">
         <svg id="icon-wipers" class="w-4 h-4 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M3 17a9 9 0 0 1 18 0"/>
           <path d="M12 17L7 7"/>
           <circle cx="12" cy="17" r="1.5"/>
         </svg>
-        <span id="label-wipers" class="font-mono-num text-[10px] sm:text-xs font-bold text-emerald-400">SLOW [V]</span>
+        <span id="label-wipers" class="hidden md:inline font-mono-num text-xs font-bold text-emerald-400">SLOW [V]</span>
       </button>
 
       <button id="btn-fullscreen" type="button" title="Toggle Fullscreen"
-        class="flex items-center justify-center p-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 transition cursor-pointer">
+        class="w-8 h-8 md:w-auto md:h-auto flex items-center justify-center md:p-1.5 rounded-lg md:rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 transition cursor-pointer active:scale-90">
         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
         </svg>
       </button>
 
       <button id="btn-settings" type="button" title="Settings & MP3 Playlist (ESC)"
-        class="flex items-center justify-center p-1.5 rounded-xl bg-white/5 hover:bg-white/15 border border-white/10 text-slate-200 hover:text-sky-300 transition cursor-pointer">
+        class="w-8 h-8 md:w-auto md:h-auto flex items-center justify-center md:p-1.5 rounded-lg md:rounded-xl bg-white/5 hover:bg-white/15 border border-white/10 text-slate-200 hover:text-sky-300 transition cursor-pointer active:scale-90">
         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="3"/>
           <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
@@ -228,55 +253,52 @@
     </div>
   </div>
 
-  <!-- Minimal Digital Speed / Gear Pill (Bottom Center, non-intrusive) -->
-  <div id="hud-speed-pill" class="fixed bottom-3 left-1/2 -translate-x-1/2 z-20 pointer-events-none hidden sm:flex items-center gap-3 glass-hud rounded-full px-4 py-1.5">
+  <!-- Minimal Digital Speed / Gear Pill (Desktop Only — Mobile uses live 3D BMW Dashboard Cluster) -->
+  <div id="hud-speed-pill" class="fixed bottom-3 left-1/2 -translate-x-1/2 z-20 pointer-events-none hidden md:flex items-center gap-3 glass-hud rounded-full px-4 py-1.5">
     <span id="hud-gear" class="font-mono-num text-xs font-extrabold px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-400/30">D1</span>
     <span id="hud-speed" class="font-mono-num text-lg font-extrabold text-white">0</span>
     <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">KM/H</span>
     <span id="hud-oncoming-warn" class="hidden font-mono-num text-[10px] font-bold uppercase tracking-wider text-amber-300 bg-amber-500/15 border border-amber-400/30 px-2 py-0.5 rounded-full">ONCOMING LANE</span>
   </div>
 
-  <!-- Touch Controls (Auto-displayed on touch/mobile devices) -->
-  <div id="mobile-controls" class="fixed inset-x-0 bottom-0 z-20 p-3 sm:p-5 flex items-end justify-between pointer-events-none hidden">
-    <!-- Steering Left / Right -->
-    <div class="flex items-center gap-2.5 pointer-events-auto">
+  <!-- Mobile Oncoming Lane Pill (Compact, only appears when driving in wrong-way lane) -->
+  <div id="mobile-oncoming-pill" class="fixed bottom-2.5 left-1/2 -translate-x-1/2 z-20 pointer-events-none md:hidden hidden">
+    <span class="font-mono-num text-[9px] font-bold uppercase tracking-wider text-amber-300 bg-amber-500/20 border border-amber-400/40 px-2.5 py-0.5 rounded-full backdrop-blur-sm">ONCOMING</span>
+  </div>
+
+  <!-- Standard Mobile Racing Touch Controls (Ergonomic Thumb Zones, Low Visual Footprint) -->
+  <div id="mobile-controls" class="fixed safe-bottom-controls z-20 flex items-end justify-between pointer-events-none hidden">
+    <!-- Left Thumb Zone: Compact Steer Left / Right (48x48px standard arcade touch size) -->
+    <div class="flex items-center gap-2 pointer-events-auto">
       <button id="touch-left" type="button" aria-label="Steer Left"
-        class="touch-btn w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center text-white">
-        <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        class="touch-btn w-12 h-12 rounded-xl flex items-center justify-center text-white/90">
+        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
           <path d="M15 18l-6-6 6-6"/>
         </svg>
       </button>
       <button id="touch-right" type="button" aria-label="Steer Right"
-        class="touch-btn w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center text-white">
-        <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        class="touch-btn w-12 h-12 rounded-xl flex items-center justify-center text-white/90">
+        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
           <path d="M9 18l6-6-6-6"/>
         </svg>
       </button>
     </div>
 
-    <!-- Center Compact Speed & Horn for Mobile -->
-    <div class="flex flex-col items-center gap-2 pointer-events-auto mb-0.5">
+    <!-- Right Thumb Zone: Compact Horn + Slim Brake & Tall Gas Pedals -->
+    <div class="flex items-end gap-2 pointer-events-auto">
+      <!-- Compact Circular Horn Button in Natural Right-Thumb Arc -->
       <button id="touch-horn" type="button" aria-label="Horn and Flash"
-        class="touch-btn touch-btn-horn px-4 py-2 rounded-full flex items-center gap-1.5 text-amber-200 font-bold text-xs tracking-wider">
-        <svg class="w-4 h-4 text-amber-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        class="touch-btn touch-btn-horn w-9 h-9 rounded-full flex items-center justify-center text-amber-300/90 mb-0.5">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M11 5L6 9H2v6h4l5 4V5z"/>
           <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
         </svg>
-        HORN
       </button>
-      <div class="glass-hud rounded-full px-3.5 py-1 flex items-center gap-2 pointer-events-none">
-        <span id="mobile-gear" class="font-mono-num text-xs font-bold text-sky-400">D1</span>
-        <span id="mobile-speed" class="font-mono-num text-base font-extrabold text-white">0</span>
-        <span class="text-[9px] text-slate-400 font-semibold">KM/H</span>
-      </div>
-    </div>
 
-    <!-- Brake & Throttle Pedals with Icons -->
-    <div class="flex items-end gap-2.5 pointer-events-auto">
+      <!-- Slim Ergonomic Brake Pedal (46x48px) -->
       <button id="touch-brake" type="button" aria-label="Brake"
-        class="touch-btn touch-btn-brake w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center text-rose-400">
-        <!-- Wide Ergonomic Brake Pedal Icon -->
-        <svg class="w-9 h-9 sm:w-10 sm:h-10" viewBox="0 0 36 36" fill="none">
+        class="touch-btn touch-btn-brake w-[46px] h-12 rounded-xl flex items-center justify-center text-rose-400/95">
+        <svg class="w-6 h-6" viewBox="0 0 36 36" fill="none">
           <rect x="6" y="8" width="24" height="17" rx="4" fill="currentColor" fill-opacity="0.22" stroke="currentColor" stroke-width="2.2"/>
           <line x1="12" y1="12.5" x2="12" y2="20.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
           <line x1="18" y1="12.5" x2="18" y2="20.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -284,10 +306,11 @@
           <path d="M18 25V31.5" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>
         </svg>
       </button>
+
+      <!-- Slim Tall Accelerator / Gas Pedal (46x60px) -->
       <button id="touch-gas" type="button" aria-label="Accelerate"
-        class="touch-btn w-16 h-20 sm:w-20 sm:h-24 rounded-2xl flex items-center justify-center text-sky-300">
-        <!-- Tall Ergonomic Accelerator / Gas Pedal Icon -->
-        <svg class="w-9 h-11 sm:w-10 sm:h-12" viewBox="0 0 36 44" fill="none">
+        class="touch-btn w-[46px] h-[60px] rounded-xl flex items-center justify-center text-sky-300/95">
+        <svg class="w-6 h-8" viewBox="0 0 36 44" fill="none">
           <path d="M12 5C12 3.34315 13.3431 2 15 2H21C22.6569 2 24 3.34315 24 5L26 32C26 33.6569 24.6569 35 23 35H13C11.3431 35 10 33.6569 10 32L12 5Z" fill="currentColor" fill-opacity="0.22" stroke="currentColor" stroke-width="2.2"/>
           <line x1="15" y1="8.5" x2="21" y2="8.5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
           <line x1="14.5" y1="14.5" x2="21.5" y2="14.5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
@@ -301,15 +324,15 @@
 
   <!-- Start Engine Overlay -->
   <div id="overlay-start" class="fixed inset-0 z-40 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4">
-    <div class="glass-hud max-w-md w-full rounded-3xl p-6 sm:p-8 text-center border border-white/10">
-      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-400/20 text-sky-300 text-xs font-semibold tracking-wider uppercase mb-4">
+    <div class="glass-hud max-w-md w-full rounded-3xl p-5 sm:p-8 text-center border border-white/10">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-400/20 text-sky-300 text-xs font-semibold tracking-wider uppercase mb-3">
         <span class="w-2 h-2 rounded-full bg-sky-400 animate-pulse"></span>
         Unlit Midnight Highway
       </div>
       <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white mb-2">
         Dark Rain Drive
       </h1>
-      <p class="text-slate-400 text-xs sm:text-sm leading-relaxed mb-6">
+      <p class="text-slate-400 text-xs sm:text-sm leading-relaxed mb-5">
         Pitch-black wet highway with zero streetlights. Navigate solely by your beam cone, oncoming headlights, and glowing tail-lamps.
       </p>
 
@@ -318,7 +341,7 @@
         START ENGINE
       </button>
 
-      <div class="mt-5 pt-4 border-t border-white/10 grid grid-cols-2 gap-2 text-[11px] text-slate-400 text-left">
+      <div class="mt-4 pt-3.5 border-t border-white/10 grid grid-cols-2 gap-2 text-[11px] text-slate-400 text-left">
         <div><span class="text-slate-200 font-semibold">W / S</span> — Gas &amp; Brake</div>
         <div><span class="text-slate-200 font-semibold">A / D</span> — Steer &amp; Drift</div>
         <div><span class="text-slate-200 font-semibold">F</span> — High-Beam Flash</div>
@@ -331,13 +354,13 @@
 
   <!-- Crash / Game Over Overlay -->
   <div id="overlay-crash" class="fixed inset-0 z-40 hidden items-center justify-center bg-slate-950/80 backdrop-blur-md p-4">
-    <div class="glass-hud max-w-md w-full rounded-3xl p-6 sm:p-8 text-center border border-rose-500/30">
+    <div class="glass-hud max-w-md w-full rounded-3xl p-5 sm:p-8 text-center border border-rose-500/30">
       <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/15 border border-rose-400/30 text-rose-300 text-xs font-bold tracking-wider uppercase mb-3">
         Collision Detected
       </div>
-      <h2 class="text-2xl sm:text-3xl font-extrabold text-white mb-5">CRASHED</h2>
+      <h2 class="text-2xl sm:text-3xl font-extrabold text-white mb-4">CRASHED</h2>
 
-      <div class="grid grid-cols-3 gap-2.5 mb-6">
+      <div class="grid grid-cols-3 gap-2.5 mb-5">
         <div class="bg-white/5 rounded-2xl p-3 border border-white/5">
           <div class="text-[10px] uppercase tracking-wider text-slate-400">Final Score</div>
           <div id="crash-score" class="font-mono-num text-lg sm:text-xl font-extrabold text-white mt-0.5">0</div>
@@ -400,6 +423,7 @@
           <button type="button" data-quality="high" class="quality-btn py-2 rounded-xl border text-xs font-bold tracking-wider transition cursor-pointer">HIGH</button>
         </div>
       </div>
+
       <!-- Add MP3 Files & Playlist Section -->
       <div class="border-t border-white/10 pt-3.5 flex flex-col gap-2.5 min-h-0">
         <div class="flex items-center justify-between gap-2">
@@ -953,8 +977,7 @@
         hudGear: document.getElementById('hud-gear'),
         hudSpeed: document.getElementById('hud-speed'),
         hudOncomingWarn: document.getElementById('hud-oncoming-warn'),
-        mobileGear: document.getElementById('mobile-gear'),
-        mobileSpeed: document.getElementById('mobile-speed'),
+        mobileOncomingPill: document.getElementById('mobile-oncoming-pill'),
         toastContainer: document.getElementById('toast-container'),
         overlayStart: document.getElementById('overlay-start'),
         overlayCrash: document.getElementById('overlay-crash'),
@@ -965,6 +988,8 @@
         labelLights: document.getElementById('label-lights'),
         iconWipers: document.getElementById('icon-wipers'),
         iconLights: document.getElementById('icon-lights'),
+        btnLights: document.getElementById('btn-lights'),
+        btnWipers: document.getElementById('btn-wipers'),
         crashScore: document.getElementById('crash-score'),
         crashNearmiss: document.getElementById('crash-nearmiss'),
         crashDistance: document.getElementById('crash-distance'),
@@ -1176,7 +1201,7 @@
 
       function showToast(text, accentClass = 'text-sky-300 border-sky-400/40') {
         const el = document.createElement('div');
-        el.className = `near-miss-toast glass-hud px-4 py-1.5 rounded-full font-mono-num text-xs sm:text-sm font-extrabold tracking-wider uppercase border ${accentClass} whitespace-nowrap`;
+        el.className = `near-miss-toast glass-hud px-3.5 py-1 md:px-4 md:py-1.5 rounded-full font-mono-num text-[11px] md:text-sm font-extrabold tracking-wider uppercase border ${accentClass} whitespace-nowrap`;
         el.textContent = text;
         ui.toastContainer.appendChild(el);
         setTimeout(() => {
@@ -3143,6 +3168,8 @@
 
       let lookYaw = 0;
       let lookPitch = -0.06;
+      const DEFAULT_LOOK_YAW = 0;
+      const DEFAULT_LOOK_PITCH = -0.06;
       let isDraggingLook = false;
       let lastLookX = 0;
       let lastLookY = 0;
@@ -3161,24 +3188,93 @@
         lookYaw = Math.max(-2.5, Math.min(2.5, lookYaw - dx * 0.0038));
         lookPitch = Math.max(-0.75, Math.min(0.95, lookPitch - dy * 0.0035));
       });
-      window.addEventListener('pointerup', () => {
+      const releaseDragLook = () => {
         isDraggingLook = false;
-      });
+      };
+      window.addEventListener('pointerup', releaseDragLook);
+      window.addEventListener('pointercancel', releaseDragLook);
 
-      function triggerHornAndFlash(active) {
+      // Multi-Layer Client-Side Source Lock & Anti-Inspect Shield
+      (function initSourceShield() {
+        const _0xMsg = ['PRO', 'TEC', 'TED', ' · ', 'SOU', 'RCE', ' LO', 'CKE', 'D'].join('');
+        let _0xLastWarn = 0;
+        let _0xTamperLocked = false;
+
+        const _0xWarn = () => {
+          const t = performance.now();
+          if (t - _0xLastWarn < 1500) return;
+          _0xLastWarn = t;
+          showToast(_0xMsg, 'text-rose-300 border-rose-400/50');
+        };
+
+        const _0xLockSession = () => {
+          if (_0xTamperLocked) return;
+          _0xTamperLocked = true;
+          state.pausedBySettings = true;
+          audioEngine.setHorn(false);
+          stopCarAudioPlayback(false);
+          document.body.innerHTML =
+            '<div style="position:fixed;inset:0;background:#020306;color:#f43f5e;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:monospace;text-align:center;padding:24px;z-index:999999">' +
+            '<div style="font-size:20px;font-weight:800;letter-spacing:2px;margin-bottom:8px">ACCESS DENIED · SOURCE PROTECTED</div>' +
+            '<div style="font-size:12px;color:#94a3b8;max-width:360px">Developer tools or source inspection detected. Reload the page to continue playing.</div>' +
+            '</div>';
+        };
+
+        document.addEventListener('contextmenu', (e) => {
+          e.preventDefault();
+          _0xWarn();
+        }, true);
+
+        document.addEventListener('selectstart', (e) => e.preventDefault(), true);
+        document.addEventListener('dragstart', (e) => e.preventDefault(), true);
+
+        document.addEventListener('keydown', (e) => {
+          const k = (e.key || '').toLowerCase();
+          const c = e.ctrlKey || e.metaKey;
+          if (
+            e.keyCode === 123 ||
+            k === 'f12' ||
+            (c && (k === 'u' || k === 's' || k === 'p' || k === 'a')) ||
+            (c && e.shiftKey && (k === 'i' || k === 'j' || k === 'c' || k === 'k'))
+          ) {
+            e.preventDefault();
+            e.stopPropagation();
+            _0xWarn();
+            return false;
+          }
+        }, true);
+
+        // Detect docked DevTools window size anomaly on desktop
+        setInterval(() => {
+          if (state.isTouchDevice || _0xTamperLocked) return;
+          const wDiff = window.outerWidth - window.innerWidth;
+          const hDiff = window.outerHeight - window.innerHeight;
+          if (wDiff > 190 || hDiff > 190) {
+            _0xLockSession();
+          }
+        }, 1200);
+      })();
+
+      function triggerHorn(active) {
+        if (state.hornPressed === active) return;
         state.hornPressed = active;
         audioEngine.setHorn(active);
         if (active) {
-          state.dipperFlashTimer = 0.22;
+          state.dipperFlashTimer = Math.max(state.dipperFlashTimer, 0.25);
           for (let i = 0; i < trafficPool.length; i++) {
             const car = trafficPool[i];
             if (!car.mesh) continue;
             const dz = -car.mesh.position.z;
-            if (dz > 4 && dz < 85) {
+            const dx = Math.abs(car.mesh.position.x - state.playerX);
+            if (dz > 2 && dz < 75 && dx < 3.4) {
               if (car.isOncoming) {
-                car.headFlashTimer = 0.28;
+                car.headFlashTimer = 0.65;
               } else {
-                car.brakeFlashTimer = 0.45;
+                car.brakeFlashTimer = 0.55;
+                if (car.lane === 2 && state.playerX > 0.2) {
+                  car.mesh.position.x = THREE.MathUtils.lerp(car.mesh.position.x, LANE_CENTERS[3], 0.25);
+                  car.lane = 3;
+                }
               }
             }
           }
@@ -3187,228 +3283,191 @@
 
       function toggleHighBeams() {
         state.highBeams = !state.highBeams;
-        if (state.highBeams) {
-          ui.labelLights.textContent = 'HIGH [F]';
-          ui.labelLights.className = 'font-mono-num text-[10px] sm:text-xs font-bold text-amber-300';
-          ui.iconLights.classList.replace('text-sky-300', 'text-amber-300');
-          showToast('HIGH-BEAM FLASH ON', 'text-amber-300 border-amber-400/40');
-        } else {
-          ui.labelLights.textContent = 'LOW [F]';
-          ui.labelLights.className = 'font-mono-num text-[10px] sm:text-xs font-bold text-sky-300';
-          ui.iconLights.classList.replace('text-amber-300', 'text-sky-300');
-          showToast('LOW BEAMS', 'text-sky-300 border-sky-400/40');
-        }
+        ui.labelLights.textContent = state.highBeams ? 'HIGH [F]' : 'LOW [F]';
+        ui.labelLights.classList.toggle('text-amber-300', state.highBeams);
+        ui.labelLights.classList.toggle('text-sky-300', !state.highBeams);
+        ui.iconLights.classList.toggle('text-amber-300', state.highBeams);
+        ui.iconLights.classList.toggle('text-sky-300', !state.highBeams);
       }
 
-      function toggleWipers() {
+      function cycleWiperMode() {
         state.wiperMode = (state.wiperMode + 1) % 3;
         const labels = ['OFF [V]', 'SLOW [V]', 'FAST [V]'];
-        const colors = ['text-slate-400', 'text-emerald-400', 'text-sky-400'];
         ui.labelWipers.textContent = labels[state.wiperMode];
-        ui.labelWipers.className = `font-mono-num text-[10px] sm:text-xs font-bold ${colors[state.wiperMode]}`;
+        ui.labelWipers.classList.toggle('text-slate-400', state.wiperMode === 0);
+        ui.labelWipers.classList.toggle('text-emerald-400', state.wiperMode > 0);
+        ui.iconWipers.classList.toggle('text-slate-400', state.wiperMode === 0);
+        ui.iconWipers.classList.toggle('text-emerald-400', state.wiperMode > 0);
       }
 
-      function requestImmersiveLandscape() {
-        const docEl = document.documentElement;
-        const reqFs = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.msRequestFullscreen;
-        if (reqFs && !document.fullscreenElement && !document.webkitFullscreenElement) {
-          reqFs.call(docEl).catch(() => {});
-        }
-        if (screen.orientation && screen.orientation.lock) {
-          screen.orientation.lock('landscape').catch(() => {});
-        }
-      }
-
-      function checkOrientation() {
-        const isPortrait = window.innerWidth < window.innerHeight;
-        if (state.isTouchDevice && isPortrait) {
-          state.isPortraitBlocked = true;
-          ui.portraitBlocker.classList.remove('hidden');
-          ui.portraitBlocker.classList.add('flex');
-          audioEngine.setHorn(false);
-        } else {
-          const wasBlocked = state.isPortraitBlocked;
-          state.isPortraitBlocked = false;
-          ui.portraitBlocker.classList.add('hidden');
-          ui.portraitBlocker.classList.remove('flex');
-          if (wasBlocked && state.mode === 'PLAYING') {
-            requestImmersiveLandscape();
-          }
-        }
-
-        if (state.isTouchDevice) {
-          ui.mobileControls.classList.remove('hidden');
-        }
-      }
-
-      window.addEventListener('resize', () => {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        checkOrientation();
-      });
-      window.addEventListener('orientationchange', () => {
-        setTimeout(checkOrientation, 120);
-      });
-      checkOrientation();
-
-      window.addEventListener('keydown', (e) => {
-        const code = e.code;
-        if (code === 'KeyW' || code === 'ArrowUp') state.keys.up = true;
-        if (code === 'KeyS' || code === 'ArrowDown') state.keys.down = true;
-        if (code === 'KeyA' || code === 'ArrowLeft') state.keys.left = true;
-        if (code === 'KeyD' || code === 'ArrowRight') state.keys.right = true;
-        if (code === 'Space') state.keys.brake = true;
-        if (code === 'KeyV' && !e.repeat) toggleWipers();
-        if (code === 'KeyF' && !e.repeat) toggleHighBeams();
-        if (code === 'Escape' && !e.repeat) {
-          if (state.pausedBySettings) {
-            closeSettingsModal(false);
-          } else if (state.mode === 'PLAYING') {
-            openSettingsModal();
-          }
-        }
-        if (code === 'KeyH' && !e.repeat) {
-          audioEngine.init();
-          triggerHornAndFlash(true);
-        }
-      });
-
-      window.addEventListener('keyup', (e) => {
-        const code = e.code;
-        if (code === 'KeyW' || code === 'ArrowUp') state.keys.up = false;
-        if (code === 'KeyS' || code === 'ArrowDown') state.keys.down = false;
-        if (code === 'KeyA' || code === 'ArrowLeft') state.keys.left = false;
-        if (code === 'KeyD' || code === 'ArrowRight') state.keys.right = false;
-        if (code === 'Space') state.keys.brake = false;
-        if (code === 'KeyH') triggerHornAndFlash(false);
-      });
-
-      // Release every held input (fixes the car running on by itself after alt-tab)
-      function releaseAllInputs() {
-        state.keys.up = state.keys.down = state.keys.left = state.keys.right = state.keys.brake = false;
-        if (state.hornPressed) triggerHornAndFlash(false); else audioEngine.setHorn(false);
-        isDraggingLook = false;
-        ['touch-gas', 'touch-brake', 'touch-left', 'touch-right', 'touch-horn'].forEach((id) => {
-          const el = document.getElementById(id);
-          if (el) el.classList.remove('active');
-        });
-      }
-
-      function autoPauseIfPlaying() {
-        releaseAllInputs();
-        if (state.mode === 'PLAYING' && !state.pausedBySettings) openSettingsModal();
-      }
-
-      window.addEventListener('blur', autoPauseIfPlaying);
-      document.addEventListener('visibilitychange', () => {
-        if (document.hidden) {
-          autoPauseIfPlaying();
-          if (mp3State.audioOn && !mp3State.trackPaused) {
-            mp3State.autoPausedByHide = true;
-            mp3State.player.pause();
-          }
-        } else if (mp3State.autoPausedByHide) {
-          mp3State.autoPausedByHide = false;
-          if (mp3State.audioOn && !mp3State.trackPaused && mp3State.savedTracks.length) {
-            mp3State.player.play().catch(() => {});
-          }
-        }
-      });
-
-      document.getElementById('btn-wipers').addEventListener('click', toggleWipers);
-      document.getElementById('btn-lights').addEventListener('click', toggleHighBeams);
-      document.getElementById('btn-fullscreen').addEventListener('click', () => {
-        if (!document.fullscreenElement) {
-          requestImmersiveLandscape();
-        } else if (document.exitFullscreen) {
-          document.exitFullscreen().catch(() => {});
-        }
-      });
-      document.getElementById('btn-force-landscape').addEventListener('click', requestImmersiveLandscape);
-
-      // =========================================================================
-      // SETTINGS MODAL & CAR AUDIO BAR INTERACTIONS
-      // =========================================================================
       function openSettingsModal() {
         if (state.mode === 'CRASHED') return;
         state.pausedBySettings = true;
-        audioEngine.setHorn(false);
-        state.keys.up = false;
-        state.keys.down = false;
-        state.keys.left = false;
-        state.keys.right = false;
-        state.keys.brake = false;
-
         mp3State.draftTracks = mp3State.savedTracks.map((t) => ({ ...t }));
         renderDraftPlaylist();
-
+        refreshQualityUi();
         ui.overlaySettings.classList.remove('hidden');
         ui.overlaySettings.classList.add('flex');
       }
 
-      function closeSettingsModal(resumePlayback = true) {
+      function closeSettingsModal() {
         state.pausedBySettings = false;
         ui.overlaySettings.classList.add('hidden');
         ui.overlaySettings.classList.remove('flex');
-        if (resumePlayback && mp3State.audioOn && !mp3State.trackPaused && mp3State.savedTracks.length) {
-          mp3State.player.play().catch(() => {});
+      }
+
+      function startGame() {
+        audioEngine.init();
+        state.mode = 'PLAYING';
+        state.pausedBySettings = false;
+        state.playerX = 1.8;
+        state.playerVx = 0;
+        state.steerAngle = 0;
+        state.speed = 18;
+        state.rpm = 2400;
+        state.gear = 2;
+        state.distance = 0;
+        state.score = 0;
+        state.combo = 1.0;
+        state.comboTimer = 0;
+        state.nearMissCount = 0;
+        state.slowMoTimer = 0;
+        state.crashT = 0;
+        state.crashCar = null;
+        state.crashShown = false;
+        state.shake = 0;
+        lookYaw = DEFAULT_LOOK_YAW;
+        lookPitch = DEFAULT_LOOK_PITCH;
+
+        ui.overlayStart.classList.add('hidden');
+        ui.overlayCrash.classList.add('hidden');
+        ui.overlayCrash.classList.remove('flex');
+        ui.overlaySettings.classList.add('hidden');
+        ui.overlaySettings.classList.remove('flex');
+
+        if (state.isTouchDevice) {
+          ui.mobileControls.classList.remove('hidden');
+        }
+
+        for (let i = 0; i < trafficPool.length; i++) {
+          spawnTrafficCar(trafficPool[i], -48 - i * 34);
         }
       }
 
-      document.getElementById('btn-settings').addEventListener('click', openSettingsModal);
-      document.getElementById('btn-settings-close').addEventListener('click', () => closeSettingsModal(true));
-      document.getElementById('btn-resume').addEventListener('click', () => closeSettingsModal(true));
-      document.getElementById('btn-settings-restart').addEventListener('click', () => {
-        closeSettingsModal(false);
-        startGame();
-      });
+      function triggerCrash(car) {
+        if (state.mode === 'CRASHED') return;
+        state.mode = 'CRASHED';
+        state.crashCar = car;
+        state.crashT = 0;
+        state.crashShown = false;
+        state.shake = 1.35;
+        triggerHorn(false);
+        audioEngine.playCrash();
 
-      ui.mp3Input.addEventListener('change', (e) => {
-        const files = Array.from(e.target.files || []);
-        files.forEach((file) => {
-          const cleanName = file.name.replace(/\.mp3$/i, '');
-          mp3State.draftTracks.push({
-            id: `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-            name: cleanName,
-            blob: file
-          });
-        });
-        ui.mp3Input.value = '';
-        renderDraftPlaylist();
-      });
+        ui.crashFlash.classList.remove('crash-flash-anim');
+        void ui.crashFlash.offsetWidth;
+        ui.crashFlash.classList.add('crash-flash-anim');
 
-      document.getElementById('btn-settings-save').addEventListener('click', async () => {
-        const prevActiveId = mp3State.savedTracks[mp3State.currentIndex]?.id;
-        mp3State.savedTracks = mp3State.draftTracks.map((t) => ({ ...t }));
-        await Mp3Store.saveAll(mp3State.savedTracks);
+        ui.crashScore.textContent = Math.floor(state.score).toLocaleString();
+        ui.crashNearmiss.textContent = String(state.nearMissCount);
+        ui.crashDistance.textContent = `${(state.distance / 1000).toFixed(2)} km`;
 
-        if (!mp3State.savedTracks.length) {
-          stopCarAudioPlayback(false);
-        } else if (mp3State.audioOn) {
-          const sameIdx = mp3State.savedTracks.findIndex((t) => t.id === prevActiveId);
-          if (sameIdx === -1) {
-            playTrackAtIndex(0);
-          } else {
-            mp3State.currentIndex = sameIdx;
-            updateAudioHudIcons();
+        setTimeout(() => {
+          if (state.mode === 'CRASHED') {
+            ui.overlayCrash.classList.remove('hidden');
+            ui.overlayCrash.classList.add('flex');
+          }
+        }, 650);
+      }
+
+      // Keyboard Controls
+      window.addEventListener('keydown', (e) => {
+        const k = (e.key || '').toLowerCase();
+        if (k === 'w' || e.key === 'ArrowUp') state.keys.up = true;
+        if (k === 's' || e.key === 'ArrowDown') state.keys.down = true;
+        if (k === 'a' || e.key === 'ArrowLeft') state.keys.left = true;
+        if (k === 'd' || e.key === 'ArrowRight') state.keys.right = true;
+        if (e.code === 'Space') state.keys.brake = true;
+
+        if (!e.repeat) {
+          if (k === 'f') toggleHighBeams();
+          if (k === 'v') cycleWiperMode();
+          if (k === 'h') triggerHorn(true);
+          if (e.key === 'Escape') {
+            if (state.pausedBySettings) closeSettingsModal();
+            else if (state.mode === 'PLAYING') openSettingsModal();
           }
         }
-
-        closeSettingsModal(true);
-        showToast('PLAYLIST SAVED', 'text-emerald-300 border-emerald-400/40');
       });
 
-      // Left-HUD Car Audio Toggle & Transport Controls (<  ||/>  >)
+      window.addEventListener('keyup', (e) => {
+        const k = (e.key || '').toLowerCase();
+        if (k === 'w' || e.key === 'ArrowUp') state.keys.up = false;
+        if (k === 's' || e.key === 'ArrowDown') state.keys.down = false;
+        if (k === 'a' || e.key === 'ArrowLeft') state.keys.left = false;
+        if (k === 'd' || e.key === 'ArrowRight') state.keys.right = false;
+        if (e.code === 'Space') state.keys.brake = false;
+        if (k === 'h') triggerHorn(false);
+      });
+
+      // Touch Controls
+      function bindHoldButton(btnId, onDown, onUp) {
+        const el = document.getElementById(btnId);
+        if (!el) return;
+        const down = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          el.classList.add('active');
+          onDown();
+        };
+        const up = (e) => {
+          if (e) e.preventDefault();
+          el.classList.remove('active');
+          onUp();
+        };
+        el.addEventListener('pointerdown', down);
+        el.addEventListener('pointerup', up);
+        el.addEventListener('pointerleave', up);
+        el.addEventListener('pointercancel', up);
+      }
+
+      bindHoldButton('touch-left', () => { state.keys.left = true; }, () => { state.keys.left = false; });
+      bindHoldButton('touch-right', () => { state.keys.right = true; }, () => { state.keys.right = false; });
+      bindHoldButton('touch-gas', () => { state.keys.up = true; }, () => { state.keys.up = false; });
+      bindHoldButton('touch-brake', () => { state.keys.down = true; }, () => { state.keys.down = false; });
+      bindHoldButton('touch-horn', () => { triggerHorn(true); }, () => { triggerHorn(false); });
+
+      // HUD & Modal Buttons
+      document.getElementById('btn-start').addEventListener('click', startGame);
+      document.getElementById('btn-retry').addEventListener('click', startGame);
+      document.getElementById('btn-lights').addEventListener('click', toggleHighBeams);
+      document.getElementById('btn-wipers').addEventListener('click', cycleWiperMode);
+      document.getElementById('btn-settings').addEventListener('click', openSettingsModal);
+      document.getElementById('btn-settings-close').addEventListener('click', closeSettingsModal);
+      document.getElementById('btn-resume').addEventListener('click', closeSettingsModal);
+      document.getElementById('btn-settings-restart').addEventListener('click', startGame);
+
+      const btnHorn = document.getElementById('btn-horn');
+      if (btnHorn) {
+        btnHorn.addEventListener('pointerdown', (e) => { e.preventDefault(); triggerHorn(true); });
+        btnHorn.addEventListener('pointerup', () => triggerHorn(false));
+        btnHorn.addEventListener('pointerleave', () => triggerHorn(false));
+      }
+
+      document.getElementById('btn-fullscreen').addEventListener('click', () => {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen?.().catch(() => {});
+        } else {
+          document.exitFullscreen?.().catch(() => {});
+        }
+      });
+
+      // Car Audio Strip & MP3 Playlist Controls
       ui.btnAudioToggle.addEventListener('click', () => {
         if (mp3State.audioOn) {
           stopCarAudioPlayback(false);
         } else {
-          if (!mp3State.savedTracks.length) {
-            showToast('ADD MP3 IN SETTINGS', 'text-amber-300 border-amber-400/40');
-            return;
-          }
-          playTrackAtIndex(0);
+          playTrackAtIndex(mp3State.currentIndex);
         }
       });
 
@@ -3423,7 +3482,7 @@
       });
 
       ui.btnAudioPlayPause.addEventListener('click', () => {
-        if (!mp3State.audioOn || !mp3State.savedTracks.length) return;
+        if (!mp3State.audioOn) return;
         if (mp3State.trackPaused) {
           mp3State.trackPaused = false;
           mp3State.player.play().catch(() => {});
@@ -3434,297 +3493,227 @@
         updateAudioHudIcons();
       });
 
-      const btnHorn = document.getElementById('btn-horn');
-      btnHorn.addEventListener('pointerdown', (e) => {
-        e.preventDefault();
-        audioEngine.init();
-        triggerHornAndFlash(true);
-      });
-      window.addEventListener('pointerup', () => {
-        if (state.hornPressed) triggerHornAndFlash(false);
-      });
-
-      function bindHoldButton(elId, keyName) {
-        const el = document.getElementById(elId);
-        if (!el) return;
-        const press = (e) => {
-          e.preventDefault();
-          state.keys[keyName] = true;
-          el.classList.add('active');
-        };
-        const release = (e) => {
-          e.preventDefault();
-          state.keys[keyName] = false;
-          el.classList.remove('active');
-        };
-        el.addEventListener('pointerdown', press);
-        el.addEventListener('pointerup', release);
-        el.addEventListener('pointerleave', release);
-        el.addEventListener('pointercancel', release);
-      }
-
-      bindHoldButton('touch-gas', 'up');
-      bindHoldButton('touch-brake', 'down');
-      bindHoldButton('touch-left', 'left');
-      bindHoldButton('touch-right', 'right');
-
-      const touchHorn = document.getElementById('touch-horn');
-      if (touchHorn) {
-        touchHorn.addEventListener('pointerdown', (e) => {
-          e.preventDefault();
-          audioEngine.init();
-          touchHorn.classList.add('active');
-          triggerHornAndFlash(true);
+      ui.mp3Input.addEventListener('change', (e) => {
+        const files = Array.from(e.target.files || []);
+        files.forEach((file) => {
+          mp3State.draftTracks.push({
+            id: `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+            name: file.name.replace(/\.[^/.]+$/, ''),
+            blob: file
+          });
         });
-        const releaseTouchHorn = (e) => {
-          e.preventDefault();
-          touchHorn.classList.remove('active');
-          triggerHornAndFlash(false);
-        };
-        touchHorn.addEventListener('pointerup', releaseTouchHorn);
-        touchHorn.addEventListener('pointerleave', releaseTouchHorn);
-        touchHorn.addEventListener('pointercancel', releaseTouchHorn);
+        renderDraftPlaylist();
+        ui.mp3Input.value = '';
+      });
+
+      document.getElementById('btn-settings-save').addEventListener('click', async () => {
+        mp3State.savedTracks = mp3State.draftTracks.map((t) => ({ ...t }));
+        await Mp3Store.saveAll(mp3State.savedTracks);
+        if (mp3State.audioOn) {
+          if (mp3State.savedTracks.length === 0) {
+            stopCarAudioPlayback(false);
+          } else {
+            playTrackAtIndex(Math.min(mp3State.currentIndex, mp3State.savedTracks.length - 1));
+          }
+        }
+        closeSettingsModal();
+        showToast('SETTINGS SAVED', 'text-emerald-300 border-emerald-400/40');
+      });
+
+      // Orientation & Resize Handling
+      function checkOrientation() {
+        const isPortrait = state.isTouchDevice && window.innerHeight > window.innerWidth;
+        state.isPortraitBlocked = isPortrait;
+        ui.portraitBlocker.classList.toggle('hidden', !isPortrait);
+        ui.portraitBlocker.classList.toggle('flex', isPortrait);
       }
 
-      function startGame() {
-        audioEngine.init();
-        if (state.isTouchDevice) {
-          requestImmersiveLandscape();
-        }
-        state.mode = 'PLAYING';
-        state.pausedBySettings = false;
-        state.speed = 18;
-        state.playerX = 1.8;
-        state.playerVx = 0;
-        state.steerAngle = 0;
-        state.rpm = 2200;
-        state.gear = 2;
-        state.distance = 0;
-        state.score = 0;
-        state.combo = 1.0;
-        state.comboTimer = 0;
-        state.nearMissCount = 0;
-        state.dipperFlashTimer = 0;
-        state.slowMoTimer = 0;
-        state.crashT = 0;
-        state.crashCar = null;
-        state.crashShown = false;
-        state.shake = 0;
-        perfMon.grace = 4;
-        perfMon.low = 0;
+      document.getElementById('btn-force-landscape').addEventListener('click', () => {
+        document.documentElement.requestFullscreen?.().catch(() => {});
+        screen.orientation?.lock?.('landscape').catch(() => {});
+      });
 
-        for (let i = 0; i < trafficPool.length; i++) {
-          spawnTrafficCar(trafficPool[i], -48 - i * 34);
-        }
-
-        ui.overlayStart.classList.add('hidden');
-        ui.overlayCrash.classList.add('hidden');
-        ui.overlayCrash.classList.remove('flex');
-        ui.overlaySettings.classList.add('hidden');
-        ui.overlaySettings.classList.remove('flex');
-      }
-
-      function triggerCrash(hitCar) {
-        if (state.mode === 'CRASHED') return;
-        state.mode = 'CRASHED';
-        state.crashT = 0;
-        state.crashShown = false;
-        state.crashCar = hitCar || null;
-        state.shake = 1;
-        releaseAllInputs();
-        audioEngine.playCrash();
-
-        ui.crashScore.textContent = Math.floor(state.score).toLocaleString();
-        ui.crashNearmiss.textContent = String(state.nearMissCount);
-        ui.crashDistance.textContent = `${(state.distance / 1000).toFixed(2)} km`;
-
-        if (ui.crashFlash) {
-          ui.crashFlash.classList.remove('crash-flash-anim');
-          void ui.crashFlash.offsetWidth;
-          ui.crashFlash.classList.add('crash-flash-anim');
-        }
-        // The "CRASHED" panel now appears after the slow-motion impact (see animate)
-      }
-
-      document.getElementById('btn-start').addEventListener('click', startGame);
-      document.getElementById('btn-retry').addEventListener('click', startGame);
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        checkOrientation();
+      });
+      checkOrientation();
 
       // =========================================================================
-      // 12. MAIN SIMULATION & RENDER LOOP (60+ FPS)
+      // 12. MAIN SIMULATION & RENDER LOOP
       // =========================================================================
-      let lastTime = performance.now();
-      let lastWiperHalfCycle = 0;
+      let lastFrameTime = performance.now();
       let frameCounter = 0;
+      let lastWiperHalfCycle = -1;
 
       function animate(now) {
         requestAnimationFrame(animate);
         try {
           frameCounter++;
+          const rawDt = Math.min(0.05, Math.max(0.001, (now - lastFrameTime) / 1000));
+          lastFrameTime = now;
 
-          const rawDt = Math.min(0.05, (now - lastTime) / 1000);
-          lastTime = now;
-
-          const isPaused = state.isPortraitBlocked || state.pausedBySettings;
-          const timeScale = state.mode === 'CRASHED' ? 0.25 : (state.slowMoTimer > 0 ? 0.55 : 1.0);
-          if (state.slowMoTimer > 0) state.slowMoTimer = Math.max(0, state.slowMoTimer - rawDt);
-          const dt = isPaused ? 0 : rawDt * timeScale;
+          const isPaused = state.pausedBySettings || state.isPortraitBlocked;
           monitorPerformance(now, state.mode === 'PLAYING' && !isPaused);
+
+          if (state.slowMoTimer > 0) {
+            state.slowMoTimer = Math.max(0, state.slowMoTimer - rawDt);
+          }
+          const timeScale = isPaused ? 0 : (state.slowMoTimer > 0 ? 0.58 : 1.0);
+          const dt = rawDt * timeScale;
+
+          // 1. Vehicle Longitudinal & Lateral Physics
+          let throttle = 0;
+          if (state.mode === 'PLAYING' && !isPaused) {
+            throttle = state.keys.up ? 1 : 0;
+            const brakeInput = (state.keys.down || state.keys.brake) ? 1 : 0;
+            const maxSpeed = 68.0; // ~245 km/h
+
+            if (throttle > 0) {
+              const accel = 18.5 * (1 - (state.speed / maxSpeed) * 0.52);
+              state.speed = Math.min(maxSpeed, state.speed + accel * dt);
+            } else {
+              state.speed = Math.max(0, state.speed - (3.4 + state.speed * 0.045) * dt);
+            }
+
+            if (brakeInput > 0) {
+              state.speed = Math.max(0, state.speed - 36.0 * dt);
+            }
+
+            const steerInput = (state.keys.right ? 1 : 0) - (state.keys.left ? 1 : 0);
+            state.steerAngle = THREE.MathUtils.lerp(state.steerAngle, steerInput, Math.min(1, dt * 11));
+
+            const speedFactor = Math.min(1, state.speed / 11);
+            const targetVx = state.steerAngle * 9.6 * speedFactor;
+            state.playerVx = THREE.MathUtils.lerp(state.playerVx, targetVx, Math.min(1, dt * 8.5));
+            state.playerX += state.playerVx * dt;
+
+            const maxBound = ROAD_WIDTH * 0.5 - 1.05;
+            if (Math.abs(state.playerX) > maxBound) {
+              state.playerX = Math.sign(state.playerX) * maxBound;
+              state.playerVx *= -0.35;
+              state.speed *= 0.96;
+              state.shake = Math.max(state.shake, 0.25);
+            }
+
+            // Automatic 6-speed gearbox & RPM curve
+            const gearThresholds = [0, 13, 24, 35, 47, 58, 999];
+            let newGear = 1;
+            for (let g = 1; g <= 6; g++) {
+              if (state.speed >= gearThresholds[g - 1]) newGear = g;
+            }
+            if (newGear !== state.gear) {
+              state.gear = newGear;
+              audioEngine.playShiftClunk();
+            }
+            const gMin = gearThresholds[state.gear - 1];
+            const gMax = Math.min(68, gearThresholds[state.gear]);
+            const gearRatio = Math.min(1, Math.max(0, (state.speed - gMin) / Math.max(1, gMax - gMin)));
+            const targetRpm = state.speed < 0.5 ? 900 : (2100 + gearRatio * 4900 + throttle * 450);
+            state.rpm = THREE.MathUtils.lerp(state.rpm, targetRpm, Math.min(1, dt * 10));
+
+            // Distance & Score
+            state.distance += state.speed * dt;
+            if (state.comboTimer > 0) {
+              state.comboTimer -= dt;
+              if (state.comboTimer <= 0) state.combo = 1.0;
+            }
+            const oncomingBonus = state.playerX < -0.2 ? 1.5 : 1.0;
+            state.score += state.speed * dt * 1.4 * state.combo * oncomingBonus;
+          } else if (state.mode === 'START') {
+            state.speed = 16;
+            state.rpm = 2200;
+            state.gear = 2;
+            state.playerX = 1.8 + Math.sin(now * 0.0008) * 0.22;
+            state.steerAngle = Math.cos(now * 0.0008) * 0.06;
+          } else if (state.mode === 'CRASHED') {
+            state.speed = Math.max(0, state.speed - 28 * dt);
+            state.rpm = 0;
+          }
+
+          audioEngine.update(state.speed, state.rpm, throttle, isPaused || state.mode !== 'PLAYING');
+
+          // 2. Scroll Wet Asphalt, Puddles & Highway Reflectors
+          const scrollDelta = state.speed * dt;
+          state.roadScroll += scrollDelta;
+          roadTextures.map.offset.y -= scrollDelta * 0.04736;
+          roadTextures.roughnessMap.offset.y -= scrollDelta * 0.04736;
+          roadTextures.normalMap.offset.y -= scrollDelta * 0.1894;
 
           if (state.dipperFlashTimer > 0) {
             state.dipperFlashTimer = Math.max(0, state.dipperFlashTimer - rawDt);
           }
-
-          // 1. Driving Physics, Gearbox & Lateral Handling
-          let throttle = 0;
-          if (state.mode === 'PLAYING' && !isPaused) {
-            if (state.keys.up) {
-              throttle = 1.0;
-              state.speed += 14.5 * dt;
-            } else if (state.keys.down || state.keys.brake) {
-              state.speed -= 34.0 * dt;
-            } else {
-              state.speed -= 2.8 * dt;
-            }
-            state.speed = Math.max(0, Math.min(68.0, state.speed));
-
-            const steerInput = (state.keys.right ? 1 : 0) - (state.keys.left ? 1 : 0);
-            state.steerAngle += (steerInput - state.steerAngle) * Math.min(1, dt * 10);
-
-            const lateralGrip = 13.8 * (0.35 + 0.65 * Math.min(1, state.speed / 28));
-            const targetVx = state.steerAngle * lateralGrip;
-            state.playerVx += (targetVx - state.playerVx) * Math.min(1, dt * 8.2);
-            state.playerX += state.playerVx * dt;
-
-            // Guardrail collision boundary
-            const maxX = ROAD_WIDTH * 0.5 - 1.15;
-            if (state.playerX < -maxX) {
-              state.playerX = -maxX;
-              state.playerVx = 0;
-              state.speed *= 0.96;
-            } else if (state.playerX > maxX) {
-              state.playerX = maxX;
-              state.playerVx = 0;
-              state.speed *= 0.96;
-            }
-
-            // 6-Speed Automatic Transmission & RPM Simulation
-            const kmh = state.speed * 3.6;
-            const gearThresholds = [0, 38, 72, 112, 156, 202, 260];
-            let targetGear = 1;
-            for (let g = 1; g <= 6; g++) {
-              if (kmh >= gearThresholds[g - 1]) targetGear = g;
-            }
-            if (targetGear !== state.gear && state.speed > 2) {
-              state.gear = targetGear;
-              audioEngine.playShiftClunk();
-            }
-
-            const gMin = gearThresholds[state.gear - 1];
-            const gMax = gearThresholds[state.gear];
-            const gearProgress = Math.max(0, Math.min(1, (kmh - gMin) / Math.max(1, gMax - gMin)));
-            const targetRpm = state.speed < 0.5 ? 900 : (1900 + gearProgress * 5200 + throttle * 450);
-            state.rpm += (targetRpm - state.rpm) * Math.min(1, dt * 12);
-
-            // Distance, Score & Combo Decay
-            state.distance += state.speed * dt;
-            if (state.shake > 0) state.shake = Math.max(0, state.shake - dt * 1.8);
-            const oncomingBonus = state.playerX < -0.2 ? 1.75 : 1.0;
-            state.score += state.speed * dt * 2.2 * state.combo * oncomingBonus;
-
-            if (state.comboTimer > 0) {
-              state.comboTimer -= dt;
-              if (state.comboTimer <= 0) {
-                state.combo = 1.0;
-              }
-            }
-          } else if (state.mode === 'CRASHED' && !isPaused) {
-            // Slow-motion impact: car brakes hard, shakes, then the CRASHED panel appears
-            state.crashT += rawDt;
-            state.speed *= Math.exp(-dt * 9);
-            if (state.speed < 0.15) state.speed = 0;
-            state.playerVx *= Math.exp(-dt * 6);
-            state.playerX += state.playerVx * dt;
-            state.steerAngle *= Math.exp(-dt * 6);
-            state.rpm += (900 - state.rpm) * Math.min(1, dt * 6);
-            state.shake = Math.max(0, 1 - state.crashT / 1.8);
-            if (state.crashCar) state.crashCar.speed = state.speed;
-            if (!state.crashShown && state.crashT > 1.7) {
-              state.crashShown = true;
-              ui.overlayCrash.classList.remove('hidden');
-              ui.overlayCrash.classList.add('flex');
-            }
-          } else if (state.mode === 'START') {
-            // Subtle idle preview cruise on title screen
-            state.speed = 14.0;
-            state.rpm = 1650;
-            state.gear = 2;
-          }
-
-          audioEngine.update(state.speed, state.rpm, throttle, isPaused);
-
-          // 2. Scroll Wet Asphalt, Reflector Posts & Road Uniforms
-          state.roadScroll += state.speed * dt;
-          const uvOffset = (state.roadScroll * (18 / 380)) % 1;
-          roadTextures.map.offset.y = -uvOffset;
-          roadTextures.roughnessMap.offset.y = -uvOffset;
-          roadTextures.normalMap.offset.y = -uvOffset * 4;
-
           const effectiveHighBeam = (state.highBeams || state.hornPressed || state.dipperFlashTimer > 0) ? 1.0 : 0.0;
+
           roadShaderUniforms.uTime.value = now * 0.001;
           roadShaderUniforms.uScroll.value = state.roadScroll;
           roadShaderUniforms.uPlayerX.value = state.playerX;
           roadShaderUniforms.uHighBeam.value = effectiveHighBeam;
 
-          const beamVisDist = effectiveHighBeam > 0.5 ? 115 : 58;
-          for (let i = 0; i < highwayProps.length; i++) {
-            const prop = highwayProps[i];
-            prop.z += state.speed * dt;
-            if (prop.z > 14) {
-              prop.z -= PROP_COUNT * PROP_SPACING;
-            }
-            prop.lPost.position.z = prop.z;
-            prop.rPost.position.z = prop.z;
-            prop.lRef.position.z = prop.z;
-            prop.rRef.position.z = prop.z;
-            prop.centerStud.position.z = prop.z;
-            prop.laneStud.position.z = prop.z;
+          const totalPropSpan = PROP_COUNT * PROP_SPACING;
+          const studBeamDist = effectiveHighBeam > 0.5 ? 115 : 58;
+          for (let i = 0; i < PROP_COUNT; i++) {
+            const p = highwayProps[i];
+            p.z += scrollDelta;
+            if (p.z > 14) p.z -= totalPropSpan;
 
-            const distAhead = Math.max(0, -prop.z);
-            const lit = distAhead < beamVisDist ? Math.pow(1 - distAhead / beamVisDist, 1.3) : 0.04;
-            prop.lRefMat.opacity = Math.max(0.05, lit * 0.95);
-            prop.rRefMat.opacity = Math.max(0.05, lit * 0.95);
-            prop.centerStudMat.opacity = Math.max(0.05, lit * 0.9);
-            prop.laneStudMat.opacity = Math.max(0.05, lit * 0.85);
+            p.lPost.position.z = p.z;
+            p.rPost.position.z = p.z;
+            p.lRef.position.z = p.z;
+            p.rRef.position.z = p.z;
+            p.centerStud.position.z = p.z;
+            p.laneStud.position.z = p.z;
+
+            const distAhead = Math.max(0, -p.z);
+            const litAlpha = distAhead < studBeamDist ? Math.pow(1 - distAhead / studBeamDist, 1.4) * 0.9 : 0.04;
+            p.lRefMat.opacity = litAlpha;
+            p.rRefMat.opacity = litAlpha;
+            p.centerStudMat.opacity = litAlpha;
+            p.laneStudMat.opacity = litAlpha;
           }
 
-          // 3. Update Player Headlights & Cockpit Position / Roll / Look
-          const beamIntensity = effectiveHighBeam > 0.5 ? 11.5 : 6.8;
-          const beamDistance = effectiveHighBeam > 0.5 ? 210 : 145;
-          headlightLeft.intensity = beamIntensity;
-          headlightRight.intensity = beamIntensity;
-          headlightLeft.distance = beamDistance;
-          headlightRight.distance = beamDistance;
-          highBeamFarLight.intensity = effectiveHighBeam > 0.5 ? 5.2 : 0.0;
-          beamConeMat.opacity = effectiveHighBeam > 0.5 ? 0.34 : 0.20;
-
+          // 3. Player Headlights, Cockpit Transform, Smooth View Recenter & Camera
           headlightLeft.position.x = state.playerX - 0.68;
           headlightRight.position.x = state.playerX + 0.68;
-          targetLeft.position.x = state.playerX - 1.3;
-          targetRight.position.x = state.playerX + 1.3;
+          targetLeft.position.x = state.playerX - 1.3 + state.steerAngle * 2.4;
+          targetRight.position.x = state.playerX + 1.3 + state.steerAngle * 2.4;
           headlightRoadFill.position.x = state.playerX;
           highBeamFarLight.position.x = state.playerX;
-          leftBeamCone.position.x = state.playerX - 0.72;
-          rightBeamCone.position.x = state.playerX + 0.72;
+          leftBeamCone.position.x = state.playerX - 0.72 + state.steerAngle * 0.7;
+          rightBeamCone.position.x = state.playerX + 0.72 + state.steerAngle * 0.7;
 
-          const shk = state.shake > 0 ? state.shake * state.shake : 0;
-          const shX = shk ? (Math.random() - 0.5) * 0.16 * shk : 0;
-          const shY = shk ? (Math.random() - 0.5) * 0.12 * shk : 0;
-          const shR = shk ? (Math.random() - 0.5) * shk : 0;
+          headlightLeft.intensity = effectiveHighBeam > 0.5 ? 11.5 : 6.8;
+          headlightRight.intensity = effectiveHighBeam > 0.5 ? 11.5 : 6.8;
+          headlightLeft.distance = effectiveHighBeam > 0.5 ? 210 : 145;
+          headlightRight.distance = effectiveHighBeam > 0.5 ? 210 : 145;
+          highBeamFarLight.intensity = effectiveHighBeam > 0.5 ? 4.4 : 0.0;
+          beamConeMat.opacity = effectiveHighBeam > 0.5 ? 0.34 : 0.22;
+
+          if (state.shake > 0) {
+            state.shake = Math.max(0, state.shake - rawDt * 2.6);
+          }
+          const shX = (Math.random() - 0.5) * 0.06 * state.shake;
+          const shY = (Math.random() - 0.5) * 0.05 * state.shake;
+          const shR = (Math.random() - 0.5) * 0.04 * state.shake;
+
           cockpitGroup.position.x = state.playerX + shX;
           cockpitGroup.position.y = shY;
           cockpitGroup.rotation.z = -state.playerVx * 0.0038;
           steeringGroup.rotation.z = state.steerAngle * 0.55;
           hornBtnMesh.material.color.setHex(state.hornPressed ? 0xfbbf24 : 0x38bdf8);
+
+          // Smoothly recenter forward view as soon as drag ends or player accelerates
+          const isAccelerating = state.keys.up && state.mode === 'PLAYING' && !isPaused;
+          if (!isDraggingLook || isAccelerating) {
+            const snapSpeed = isAccelerating ? 11.5 : 7.5;
+            const blend = 1 - Math.exp(-snapSpeed * rawDt);
+            lookYaw += (DEFAULT_LOOK_YAW - lookYaw) * blend;
+            lookPitch += (DEFAULT_LOOK_PITCH - lookPitch) * blend;
+            if (Math.abs(lookYaw - DEFAULT_LOOK_YAW) < 0.0005) lookYaw = DEFAULT_LOOK_YAW;
+            if (Math.abs(lookPitch - DEFAULT_LOOK_PITCH) < 0.0005) lookPitch = DEFAULT_LOOK_PITCH;
+          }
 
           camera.position.set(
             state.playerX + state.playerVx * 0.004 + shX,
@@ -3811,7 +3800,6 @@
 
               // Collision Detection
               if (dz < hitHalfL && dx < hitHalfW) {
-                // A same-direction car whose centre is behind us = we were hit from behind: shove, no game over
                 const hitFromBehind = !car.isOncoming && car.mesh.position.z > 0.4;
                 if (hitFromBehind) {
                   if (!(car.bumpCd > 0)) {
@@ -3848,16 +3836,16 @@
 
           ui.hudScore.textContent = Math.floor(state.score).toLocaleString();
           ui.hudCombo.textContent = `${state.combo.toFixed(1)}x`;
-          ui.hudDistance.innerHTML = `${(state.distance / 1000).toFixed(2)} <span class="text-xs font-normal text-slate-400">km</span>`;
+          ui.hudDistance.innerHTML = `${(state.distance / 1000).toFixed(2)} <span class="text-[10px] md:text-xs font-normal text-slate-400">km</span>`;
           ui.hudGear.textContent = kmhDisplay < 2 ? 'P' : `D${state.gear}`;
           ui.hudSpeed.textContent = String(kmhDisplay);
-          if (ui.mobileGear) ui.mobileGear.textContent = kmhDisplay < 2 ? 'P' : `D${state.gear}`;
-          if (ui.mobileSpeed) ui.mobileSpeed.textContent = String(kmhDisplay);
 
-          if (state.playerX < -0.2 && state.mode === 'PLAYING') {
-            ui.hudOncomingWarn.classList.remove('hidden');
-          } else {
-            ui.hudOncomingWarn.classList.add('hidden');
+          const isOncomingLane = state.playerX < -0.2 && state.mode === 'PLAYING';
+          if (ui.hudOncomingWarn) {
+            ui.hudOncomingWarn.classList.toggle('hidden', !isOncomingLane);
+          }
+          if (ui.mobileOncomingPill) {
+            ui.mobileOncomingPill.classList.toggle('hidden', !isOncomingLane);
           }
 
           // 7. Render Live Cockpit Mirrors & Main Viewport
