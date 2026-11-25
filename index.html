@@ -89,11 +89,19 @@
     .phone-rotate-anim {
       animation: rotatePhone 2.4s ease-in-out infinite;
     }
+    @keyframes crashFlashAnim {
+      0% { opacity: 0.85; }
+      100% { opacity: 0; }
+    }
+    .crash-flash-anim {
+      animation: crashFlashAnim 0.9s ease-out forwards;
+    }
   </style>
 </head>
 <body class="text-slate-100 antialiased">
   <!-- 3D Viewport -->
   <div id="canvas-container"></div>
+  <div id="crash-flash" class="fixed inset-0 z-30 pointer-events-none opacity-0 bg-rose-600/60"></div>
 
   <!-- Minimalist Top HUD (Unobtrusive) -->
   <div id="hud-top" class="fixed top-3 left-3 right-3 sm:top-4 sm:left-5 sm:right-5 z-20 flex items-start justify-between pointer-events-none gap-2">
@@ -353,7 +361,7 @@
 
   <!-- Settings & Custom MP3 Playlist Pause Modal -->
   <div id="overlay-settings" class="fixed inset-0 z-40 hidden items-center justify-center bg-slate-950/80 backdrop-blur-md p-4">
-    <div class="glass-hud max-w-md w-full rounded-3xl p-5 sm:p-7 border border-white/15 flex flex-col gap-4 max-h-[90vh]">
+    <div class="glass-hud max-w-md w-full rounded-3xl p-5 sm:p-7 border border-white/15 flex flex-col gap-4 max-h-[92vh] overflow-y-auto">
       <div class="flex items-center justify-between">
         <div>
           <div class="text-[10px] font-bold uppercase tracking-widest text-sky-400">Game Paused</div>
@@ -380,6 +388,18 @@
         </button>
       </div>
 
+      <!-- Graphics Quality -->
+      <div class="border-t border-white/10 pt-3.5 flex flex-col gap-2">
+        <div class="flex items-center justify-between gap-2">
+          <div class="text-xs font-bold text-slate-200">Graphics Quality</div>
+          <div id="quality-hint" class="text-[11px] text-slate-400"></div>
+        </div>
+        <div class="grid grid-cols-3 gap-2">
+          <button type="button" data-quality="low" class="quality-btn py-2 rounded-xl border text-xs font-bold tracking-wider transition cursor-pointer">LOW</button>
+          <button type="button" data-quality="medium" class="quality-btn py-2 rounded-xl border text-xs font-bold tracking-wider transition cursor-pointer">MEDIUM</button>
+          <button type="button" data-quality="high" class="quality-btn py-2 rounded-xl border text-xs font-bold tracking-wider transition cursor-pointer">HIGH</button>
+        </div>
+      </div>
       <!-- Add MP3 Files & Playlist Section -->
       <div class="border-t border-white/10 pt-3.5 flex flex-col gap-2.5 min-h-0">
         <div class="flex items-center justify-between gap-2">
@@ -912,6 +932,10 @@
         hornPressed: false,
         dipperFlashTimer: 0,
         slowMoTimer: 0,
+        crashT: 0,
+        crashCar: null,
+        crashShown: false,
+        shake: 0,
         roadScroll: 0,
         keys: {
           up: false,
@@ -944,6 +968,7 @@
         crashScore: document.getElementById('crash-score'),
         crashNearmiss: document.getElementById('crash-nearmiss'),
         crashDistance: document.getElementById('crash-distance'),
+        crashFlash: document.getElementById('crash-flash'),
         mp3Input: document.getElementById('mp3-file-input'),
         mp3List: document.getElementById('mp3-playlist-container'),
         mp3EmptyMsg: document.getElementById('mp3-empty-msg'),
@@ -1168,13 +1193,13 @@
       scene.fog = new THREE.FogExp2(0x020306, 0.0115);
 
       const camera = new THREE.PerspectiveCamera(
-        70,
+        62,
         window.innerWidth / window.innerHeight,
         0.02,
         360
       );
       const CABIN_EYE_Y = 1.22;
-      const CABIN_EYE_Z = 0.36;
+      const CABIN_EYE_Z = 0.22;   // eye is ~0.55 m from the wheel hub (was ~0.69 m)
       camera.position.set(state.playerX, CABIN_EYE_Y, CABIN_EYE_Z);
 
       const renderer = new THREE.WebGLRenderer({
@@ -1188,16 +1213,66 @@
       renderer.toneMappingExposure = 1.18;
       container.appendChild(renderer.domElement);
 
+      // =========================================================================
+      // PBR NIGHT ENVIRONMENT MAP (same idea as glTF/.glb viewers: metals, clearcoat and glass
+      // need an environment to reflect, otherwise they render flat black)
+      // =========================================================================
+      (function buildNightEnvironment() {
+        try {
+          if (!THREE.PMREMGenerator) return;
+          const envScene = new THREE.Scene();
+          const R = 60;
+          const dome = new THREE.SphereGeometry(R, 48, 24);
+          const pa = dome.attributes.position;
+          const cols = new Float32Array(pa.count * 3);
+          for (let i = 0; i < pa.count; i++) {
+            const h = pa.getY(i) / R;
+            let r, g, b;
+            if (h >= 0) {
+              const t = Math.pow(h, 0.5);
+              r = 0.050 + (0.004 - 0.050) * t; g = 0.046 + (0.007 - 0.046) * t; b = 0.060 + (0.016 - 0.060) * t;
+            } else {
+              const t = Math.pow(-h, 0.5);
+              r = 0.030 + (0.003 - 0.030) * t; g = 0.030 + (0.004 - 0.030) * t; b = 0.036 + (0.006 - 0.036) * t;
+            }
+            cols[i * 3] = r; cols[i * 3 + 1] = g; cols[i * 3 + 2] = b;
+          }
+          dome.setAttribute('color', new THREE.BufferAttribute(cols, 3));
+          envScene.add(new THREE.Mesh(dome, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.BackSide })));
+          const panel = (w, h, hex, k, x, y, z) => {
+            const m = new THREE.Mesh(
+              new THREE.PlaneGeometry(w, h),
+              new THREE.MeshBasicMaterial({ color: new THREE.Color(hex).multiplyScalar(k), side: THREE.DoubleSide })
+            );
+            m.position.set(x, y, z);
+            m.lookAt(0, 0, 0);
+            envScene.add(m);
+          };
+          panel(26, 6, 0xffa347, 2.2, -42, 5, -30);   // sodium haze on the left horizon
+          panel(10, 3, 0xdfeaff, 5.0, 36, 6, -38);    // distant oncoming headlights on the right
+          panel(40, 5, 0xbcd4ff, 0.9, 0, 46, -10);    // faint overhead sky strip
+          panel(18, 3, 0xff3b30, 1.6, 0, 4, 48);      // tail-light glow behind
+          panel(60, 60, 0x1a2434, 0.35, 0, 56, 0);    // soft overhead fill
+          const pmrem = new THREE.PMREMGenerator(renderer);
+          const envRT = pmrem.fromScene(envScene, 0.015);
+          scene.environment = envRT.texture;
+          pmrem.dispose();
+          envScene.traverse((o) => {
+            if (o.geometry) o.geometry.dispose();
+            if (o.material) o.material.dispose();
+          });
+        } catch (e) {
+          console.warn('Night environment map unavailable', e);
+        }
+      })();
+
       const cabinAmbient = new THREE.AmbientLight(0x162238, 0.95);
       scene.add(cabinAmbient);
 
-      const dashBacklight = new THREE.PointLight(0xff8a1a, 0.65, 2.4, 1.5);
-      dashBacklight.position.set(0, 1.05, -0.15);
-      scene.add(dashBacklight);
-
-      const cabinAmbientGlow = new THREE.PointLight(0x0ea5e9, 0.45, 2.8, 1.6);
-      cabinAmbientGlow.position.set(0, 1.25, 0.1);
-      scene.add(cabinAmbientGlow);
+      // Cabin lights: low orange console/footwell glow + weak cool glow from the screen.
+      // They are attached to the cockpit later (section 7) so they follow the car, and nothing glows near the roof.
+      const dashBacklight = new THREE.PointLight(0xff8a1a, 0.5, 1.8, 1.6);
+      const cabinAmbientGlow = new THREE.PointLight(0x7dc4ff, 0.22, 1.3, 1.8);
 
       // =========================================================================
       // 4. PROCEDURAL TEXTURES (WET ASPHALT, PUDDLES, LIGHT GLOWS)
@@ -1403,6 +1478,7 @@
           `);
       };
 
+      roadMat.envMapIntensity = 0.3; // keep the unlit road dark, only a faint wet sheen
       const roadMesh = new THREE.Mesh(roadGeo, roadMat);
       roadMesh.rotation.x = -Math.PI / 2;
       roadMesh.position.set(0, 0, -165);
@@ -1565,12 +1641,19 @@
       // =========================================================================
       const cockpitGroup = new THREE.Group();
       scene.add(cockpitGroup);
+      dashBacklight.position.set(0.22, 0.62, -0.15);
+      cabinAmbientGlow.position.set(0.0, 0.98, -0.5);
+      cockpitGroup.add(dashBacklight);
+      cockpitGroup.add(cabinAmbientGlow);
 
       // Orient the exact +X-forward cockpit geometry so its forward axis faces -Z (highway direction)
       // and the driver's seat aligns at local X = 0 (World X = state.playerX)
       const cabRoot = new THREE.Group();
       cabRoot.rotation.y = Math.PI / 2;
       cabRoot.position.set(0.36, 0, 0);
+      // Left-hand drive: mirror the cabin sideways so the driver seat/wheel/cluster sit on the LEFT,
+      // directly in front of the camera, and the passenger side is on the right.
+      cabRoot.scale.z = -1;
       cockpitGroup.add(cabRoot);
 
       const cvs2d = (w, h) => {
@@ -1596,7 +1679,7 @@
 
       const leatherMat = new THREE.MeshStandardMaterial({ color: 0x17171a, roughness: 0.48, bumpMap: grainTex, bumpScale: 0.004, metalness: 0.15 });
       const fabricMat = new THREE.MeshStandardMaterial({ color: 0x26272b, roughness: 0.92, bumpMap: grainTex, bumpScale: 0.003 });
-      const headlinerMat = new THREE.MeshStandardMaterial({ color: 0x6f737a, roughness: 0.95, bumpMap: grainTex, bumpScale: 0.002 });
+      const headlinerMat = new THREE.MeshStandardMaterial({ color: 0x2b2d32, roughness: 0.95, bumpMap: grainTex, bumpScale: 0.002 });
       const carpetMat = new THREE.MeshStandardMaterial({ color: 0x0d0d0f, roughness: 1.0 });
       const pianoMat = new THREE.MeshPhysicalMaterial({ color: 0x030406, roughness: 0.12, clearcoat: 1, clearcoatRoughness: 0.04 });
       const aluMat = new THREE.MeshStandardMaterial({ color: 0xb3b7bd, metalness: 0.92, roughness: 0.25 });
@@ -1747,6 +1830,7 @@
       const clTex = new THREE.CanvasTexture(cc);
       clTex.encoding = THREE.sRGBEncoding;
       clTex.anisotropy = state.isTouchDevice ? 2 : 6;
+      clTex.wrapS = THREE.RepeatWrapping; clTex.repeat.x = -1; clTex.offset.x = 1;
       const clMesh = new THREE.Mesh(
         new THREE.PlaneGeometry(0.5, 0.185).rotateY(-Math.PI / 2),
         new THREE.MeshBasicMaterial({ map: clTex, toneMapped: false })
@@ -1791,6 +1875,7 @@
       sg2.fillText('18°C   N-5 Highway', 500, 30);
       const scrT = new THREE.CanvasTexture(sc);
       scrT.encoding = THREE.sRGBEncoding;
+      scrT.wrapS = THREE.RepeatWrapping; scrT.repeat.x = -1; scrT.offset.x = 1;
       const scrMesh = new THREE.Mesh(
         new THREE.PlaneGeometry(0.3, 0.15).rotateY(-Math.PI / 2),
         new THREE.MeshBasicMaterial({ map: scrT, toneMapped: false })
@@ -1936,7 +2021,7 @@
       putCab(new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.02, 1.5), carpetMat), -0.3, 0.41, 0);
 
       const cockpitMirrors = [];
-      const eyeLocal = new THREE.Vector3(-0.15, 1.22, D_OFF);
+      const eyeLocal = new THREE.Vector3(-CABIN_EYE_Z, CABIN_EYE_Y, D_OFF);
 
       [-1, 1].forEach(s => {
         const z = s * 0.745;
@@ -1962,11 +2047,84 @@
         });
       });
 
-      const domeLampMat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffe9c0, emissiveIntensity: 0.65 });
+      const domeLampMat = new THREE.MeshStandardMaterial({ color: 0x8c9199, roughness: 0.6, emissive: 0x000000, emissiveIntensity: 0 }); // dome lamp OFF at night
       putCab(rrShape(1.45, 0.03, 1.5, 0.04, headlinerMat), -0.5, 1.49, 0);
       putCab(rrShape(0.08, 0.06, 1.5, 0.02, fabricMat), 0.22, 1.48, 0);
       putCab(rrShape(0.2, 0.012, 0.12, 0.01, domeLampMat), -0.1, 1.472, 0);
       [-1, 1].forEach(s => putCab(rrShape(0.3, 0.012, 0.36, 0.02, headlinerMat), 0.17, 1.455, s * 0.35));
+
+      // ---------------------------------------------------------------------
+      // COMPLETE CABIN (roof skin, rear window, C-pillars, seats, rear doors, side glass, contact AO)
+      // so the car looks finished when the player drags the camera up / behind
+      // ---------------------------------------------------------------------
+      const glassMat = new THREE.MeshPhysicalMaterial({
+        color: 0x06101a, metalness: 0.0, roughness: 0.04, transparent: true, opacity: 0.2,
+        side: THREE.DoubleSide, depthWrite: false, envMapIntensity: 1.4
+      });
+      const glassQuad = (pts) => {
+        const g = new THREE.BufferGeometry();
+        g.setAttribute('position', new THREE.Float32BufferAttribute(pts.flat(), 3));
+        g.setIndex([0, 1, 2, 0, 2, 3]);
+        g.computeVertexNormals();
+        const m = new THREE.Mesh(g, glassMat);
+        cabRoot.add(m);
+        return m;
+      };
+
+      // Exterior roof skin (painted) over the headliner + front roof cap
+      putCab(rrShape(1.5, 0.03, 1.56, 0.05, carShellMat), -0.5, 1.535, 0);
+      putCab(rrShape(0.22, 0.03, 1.56, 0.05, carShellMat), 0.25, 1.525, 0);
+
+      // Rear window glass, C-pillars, rear header and lower rail, parcel shelf
+      glassQuad([[-1.22, 1.46, -0.74], [-1.22, 1.46, 0.74], [-1.64, 1.02, 0.76], [-1.64, 1.02, -0.76]]);
+      [-1, 1].forEach(s => cylCab([-1.22, 1.49, s * 0.77], [-1.64, 1.0, s * 0.79], 0.05, fabricMat));
+      cylCab([-1.22, 1.485, -0.77], [-1.22, 1.485, 0.77], 0.03, fabricMat);
+      cylCab([-1.64, 1.005, -0.79], [-1.64, 1.005, 0.79], 0.025, pianoMat);
+      putCab(rrShape(0.5, 0.02, 1.38, 0.02, fabricMat), -1.4, 1.03, 0);
+
+      // Side glass (front doors + rear quarter), very light tint with environment reflections
+      [-1, 1].forEach(s => {
+        const z = s * 0.77;
+        glassQuad([[-0.30, 1.04, z], [1.06, 1.04, z], [0.27, 1.45, z], [-0.30, 1.45, z]]);
+        glassQuad([[-1.55, 1.04, z], [-0.42, 1.04, z], [-0.42, 1.45, z], [-1.25, 1.45, z]]);
+
+        // Rear door card, sill rail, armrest, ambient LED strip, roof rail
+        putCab(rrShape(0.8, 0.56, 0.05, 0.05, leatherMat), -0.85, 0.74, s * 0.745);
+        putCab(rrShape(0.8, 0.07, 0.07, 0.02, pianoMat), -0.85, 1.0, s * 0.735);
+        putCab(rrShape(0.4, 0.07, 0.13, 0.03, leatherMat), -0.85, 0.9, s * 0.7);
+        putCab(rrShape(0.6, 0.012, 0.012, 0.005, ambientLedMat), -0.85, 0.83, s * 0.72);
+        putCab(rrShape(0.8, 0.05, 0.06, 0.02, fabricMat), -0.85, 1.47, s * 0.74);
+      });
+
+      // Front seats (driver at +D_OFF, passenger at -D_OFF) with leaned backrest + headrest
+      [-1, 1].forEach(s => {
+        const zs = s * D_OFF;
+        putCab(rrShape(0.34, 0.08, 0.3, 0.02, fabricMat), -0.30, 0.43, zs);
+        putCab(rrShape(0.5, 0.12, 0.46, 0.05, leatherMat), -0.30, 0.50, zs);
+        putCab(rrShape(0.12, 0.64, 0.46, 0.05, leatherMat), -0.52, 0.88, zs, 0, 0, 0.2);
+        putCab(rrShape(0.09, 0.2, 0.22, 0.04, leatherMat), -0.585, 1.27, zs, 0, 0, 0.2);
+        putCab(rrShape(0.014, 0.5, 0.012, 0.004, stitchMat), -0.455, 0.9, zs, 0, 0, 0.2);
+      });
+
+      // Rear bench + two rear headrests
+      putCab(rrShape(0.5, 0.14, 1.34, 0.05, leatherMat), -0.98, 0.48, 0);
+      putCab(rrShape(0.12, 0.6, 1.34, 0.05, leatherMat), -1.17, 0.86, 0, 0, 0, 0.16);
+      [-1, 1].forEach(s => putCab(rrShape(0.09, 0.2, 0.24, 0.04, leatherMat), -1.215, 1.2, s * 0.36, 0, 0, 0.16));
+
+      // Fake contact shadows (baked-AO look) on the carpet under seats and in the footwells
+      const aoTex = (() => {
+        const [c, g] = cvs2d(128, 128);
+        const gr = g.createRadialGradient(64, 64, 4, 64, 64, 62);
+        gr.addColorStop(0, 'rgba(0,0,0,0.75)');
+        gr.addColorStop(1, 'rgba(0,0,0,0)');
+        g.fillStyle = gr;
+        g.fillRect(0, 0, 128, 128);
+        return new THREE.CanvasTexture(c);
+      })();
+      const aoMat = new THREE.MeshBasicMaterial({ map: aoTex, transparent: true, depthWrite: false, fog: false });
+      const aoDecal = (x, z, w, d) => putCab(new THREE.Mesh(new THREE.PlaneGeometry(w, d).rotateX(-Math.PI / 2), aoMat), x, 0.425, z);
+      [-1, 1].forEach(s => { aoDecal(-0.3, s * D_OFF, 0.9, 0.8); aoDecal(0.25, s * D_OFF, 0.7, 0.6); });
+      aoDecal(-1.0, 0, 0.9, 1.6);
 
       // Center Rearview Mirror housing + live render-target glass
       cylCab([0.46, 1.42, 0], [0.42, 1.35, 0], 0.008, pianoMat);
@@ -1984,8 +2142,8 @@
         const rt = new THREE.WebGLRenderTarget(m.rt[0], m.rt[1]);
         rt.texture.encoding = THREE.sRGBEncoding;
         rt.texture.wrapS = THREE.RepeatWrapping;
-        rt.texture.repeat.x = -1;
-        rt.texture.offset.x = 1;
+        rt.texture.repeat.x = 1;
+        rt.texture.offset.x = 0;
         m.rtt = rt;
         m.cam = new THREE.PerspectiveCamera(m.fov, m.asp, 0.05, 320);
 
@@ -2187,7 +2345,7 @@
         const col = rainGeo.attributes.color.array;
         const beamRange = (state.highBeams || state.hornPressed || state.dipperFlashTimer > 0) ? 72 : 42;
 
-        for (let i = 0; i < RAIN_COUNT; i++) {
+        for (let i = 0; i < rainActive; i++) {
           const idx = i * 6;
           let x = pos[idx];
           let y = pos[idx + 1];
@@ -2895,6 +3053,7 @@
           ? -(18 + Math.random() * 11)
           : (type === 'ferrari' || type === 'bmw_m3' ? (21 + Math.random() * 10) : (15 + Math.random() * 9));
         carObj.passed = false;
+        carObj.bumpCd = 0;
       }
 
       for (let i = 0; i < TRAFFIC_COUNT; i++) {
@@ -2906,8 +3065,84 @@
       // =========================================================================
       // 11. CONTROLS, CABIN FREE-LOOK DRAG, HORN + FLASH, FULLSCREEN & ORIENTATION
       // =========================================================================
+      // =========================================================================
+      // GRAPHICS QUALITY (LOW / MEDIUM / HIGH + AUTO-DROP WHEN FPS IS LOW)
+      // =========================================================================
+      const QUALITY_PRESETS = {
+        low:    { pixelRatio: 1,    mirrorEvery: 4, mirrorScale: 0.5,  rain: 0.45, clusterEvery: 4 },
+        medium: { pixelRatio: 1.25, mirrorEvery: 3, mirrorScale: 0.75, rain: 0.75, clusterEvery: 2 },
+        high:   { pixelRatio: state.isTouchDevice ? 1.5 : 2, mirrorEvery: 2, mirrorScale: 1, rain: 1, clusterEvery: 2 }
+      };
+      let qualityName = 'high';
+      let qualityCfg = QUALITY_PRESETS.high;
+      let rainActive = RAIN_COUNT;
+      let savedQuality = null;
+      try { savedQuality = localStorage.getItem('mrhs_quality'); } catch (e) {}
+      let autoQuality = !QUALITY_PRESETS[savedQuality];
+
+      function refreshQualityUi() {
+        document.querySelectorAll('[data-quality]').forEach((b) => {
+          const on = b.dataset.quality === qualityName;
+          b.classList.toggle('bg-sky-500/25', on);
+          b.classList.toggle('border-sky-400/60', on);
+          b.classList.toggle('text-sky-200', on);
+          b.classList.toggle('bg-white/5', !on);
+          b.classList.toggle('border-white/10', !on);
+          b.classList.toggle('text-slate-300', !on);
+        });
+        const hint = document.getElementById('quality-hint');
+        if (hint) hint.textContent = autoQuality ? 'Auto: lowers itself if laggy' : 'Manual (saved)';
+      }
+
+      function setQuality(name, fromAuto) {
+        if (!QUALITY_PRESETS[name]) name = 'high';
+        qualityName = name;
+        qualityCfg = QUALITY_PRESETS[name];
+        const p = qualityCfg;
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, p.pixelRatio));
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        cockpitMirrors.forEach((m) => {
+          if (m.rtt) m.rtt.setSize(Math.max(64, Math.round(m.rt[0] * p.mirrorScale)), Math.max(32, Math.round(m.rt[1] * p.mirrorScale)));
+        });
+        rainActive = Math.max(60, Math.round(RAIN_COUNT * p.rain));
+        rainGeo.setDrawRange(0, rainActive * 2);
+        if (!fromAuto) {
+          autoQuality = false;
+          try { localStorage.setItem('mrhs_quality', name); } catch (e) {}
+        }
+        refreshQualityUi();
+      }
+
+      document.querySelectorAll('[data-quality]').forEach((b) => {
+        b.addEventListener('click', () => setQuality(b.dataset.quality, false));
+      });
+      setQuality(QUALITY_PRESETS[savedQuality] ? savedQuality : (state.isTouchDevice ? 'medium' : 'high'), true);
+
+      const perfMon = { last: 0, frames: 0, time: 0, low: 0, grace: 4 };
+      function monitorPerformance(now, active) {
+        const delta = perfMon.last ? (now - perfMon.last) / 1000 : 0;
+        perfMon.last = now;
+        if (!active || delta > 0.5) { perfMon.frames = 0; perfMon.time = 0; return; }
+        if (perfMon.grace > 0) { perfMon.grace -= delta; return; }
+        perfMon.frames++;
+        perfMon.time += delta;
+        if (perfMon.time >= 2) {
+          const fps = perfMon.frames / perfMon.time;
+          perfMon.frames = 0;
+          perfMon.time = 0;
+          perfMon.low = (autoQuality && fps < 34) ? perfMon.low + 1 : 0;
+          if (perfMon.low >= 2 && qualityName !== 'low') {
+            perfMon.low = 0;
+            perfMon.grace = 3;
+            const next = qualityName === 'high' ? 'medium' : 'low';
+            setQuality(next, true);
+            showToast('GRAPHICS LOWERED TO ' + next.toUpperCase(), 'text-amber-300 border-amber-400/40');
+          }
+        }
+      }
+
       let lookYaw = 0;
-      let lookPitch = -0.04;
+      let lookPitch = -0.06;
       let isDraggingLook = false;
       let lastLookX = 0;
       let lastLookY = 0;
@@ -2923,8 +3158,8 @@
         const dy = e.clientY - lastLookY;
         lastLookX = e.clientX;
         lastLookY = e.clientY;
-        lookYaw = Math.max(-1.15, Math.min(1.15, lookYaw - dx * 0.0038));
-        lookPitch = Math.max(-0.48, Math.min(0.35, lookPitch - dy * 0.0035));
+        lookYaw = Math.max(-2.5, Math.min(2.5, lookYaw - dx * 0.0038));
+        lookPitch = Math.max(-0.75, Math.min(0.95, lookPitch - dy * 0.0035));
       });
       window.addEventListener('pointerup', () => {
         isDraggingLook = false;
@@ -3047,6 +3282,38 @@
         if (code === 'KeyD' || code === 'ArrowRight') state.keys.right = false;
         if (code === 'Space') state.keys.brake = false;
         if (code === 'KeyH') triggerHornAndFlash(false);
+      });
+
+      // Release every held input (fixes the car running on by itself after alt-tab)
+      function releaseAllInputs() {
+        state.keys.up = state.keys.down = state.keys.left = state.keys.right = state.keys.brake = false;
+        if (state.hornPressed) triggerHornAndFlash(false); else audioEngine.setHorn(false);
+        isDraggingLook = false;
+        ['touch-gas', 'touch-brake', 'touch-left', 'touch-right', 'touch-horn'].forEach((id) => {
+          const el = document.getElementById(id);
+          if (el) el.classList.remove('active');
+        });
+      }
+
+      function autoPauseIfPlaying() {
+        releaseAllInputs();
+        if (state.mode === 'PLAYING' && !state.pausedBySettings) openSettingsModal();
+      }
+
+      window.addEventListener('blur', autoPauseIfPlaying);
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          autoPauseIfPlaying();
+          if (mp3State.audioOn && !mp3State.trackPaused) {
+            mp3State.autoPausedByHide = true;
+            mp3State.player.pause();
+          }
+        } else if (mp3State.autoPausedByHide) {
+          mp3State.autoPausedByHide = false;
+          if (mp3State.audioOn && !mp3State.trackPaused && mp3State.savedTracks.length) {
+            mp3State.player.play().catch(() => {});
+          }
+        }
       });
 
       document.getElementById('btn-wipers').addEventListener('click', toggleWipers);
@@ -3239,6 +3506,12 @@
         state.nearMissCount = 0;
         state.dipperFlashTimer = 0;
         state.slowMoTimer = 0;
+        state.crashT = 0;
+        state.crashCar = null;
+        state.crashShown = false;
+        state.shake = 0;
+        perfMon.grace = 4;
+        perfMon.low = 0;
 
         for (let i = 0; i < trafficPool.length; i++) {
           spawnTrafficCar(trafficPool[i], -48 - i * 34);
@@ -3251,17 +3524,26 @@
         ui.overlaySettings.classList.remove('flex');
       }
 
-      function triggerCrash() {
+      function triggerCrash(hitCar) {
         if (state.mode === 'CRASHED') return;
         state.mode = 'CRASHED';
+        state.crashT = 0;
+        state.crashShown = false;
+        state.crashCar = hitCar || null;
+        state.shake = 1;
+        releaseAllInputs();
         audioEngine.playCrash();
 
         ui.crashScore.textContent = Math.floor(state.score).toLocaleString();
         ui.crashNearmiss.textContent = String(state.nearMissCount);
         ui.crashDistance.textContent = `${(state.distance / 1000).toFixed(2)} km`;
 
-        ui.overlayCrash.classList.remove('hidden');
-        ui.overlayCrash.classList.add('flex');
+        if (ui.crashFlash) {
+          ui.crashFlash.classList.remove('crash-flash-anim');
+          void ui.crashFlash.offsetWidth;
+          ui.crashFlash.classList.add('crash-flash-anim');
+        }
+        // The "CRASHED" panel now appears after the slow-motion impact (see animate)
       }
 
       document.getElementById('btn-start').addEventListener('click', startGame);
@@ -3282,10 +3564,11 @@
           const rawDt = Math.min(0.05, (now - lastTime) / 1000);
           lastTime = now;
 
-          const isPaused = state.isPortraitBlocked || state.mode === 'CRASHED' || state.pausedBySettings;
-          const timeScale = state.slowMoTimer > 0 ? 0.55 : 1.0;
+          const isPaused = state.isPortraitBlocked || state.pausedBySettings;
+          const timeScale = state.mode === 'CRASHED' ? 0.25 : (state.slowMoTimer > 0 ? 0.55 : 1.0);
           if (state.slowMoTimer > 0) state.slowMoTimer = Math.max(0, state.slowMoTimer - rawDt);
           const dt = isPaused ? 0 : rawDt * timeScale;
+          monitorPerformance(now, state.mode === 'PLAYING' && !isPaused);
 
           if (state.dipperFlashTimer > 0) {
             state.dipperFlashTimer = Math.max(0, state.dipperFlashTimer - rawDt);
@@ -3344,6 +3627,7 @@
 
             // Distance, Score & Combo Decay
             state.distance += state.speed * dt;
+            if (state.shake > 0) state.shake = Math.max(0, state.shake - dt * 1.8);
             const oncomingBonus = state.playerX < -0.2 ? 1.75 : 1.0;
             state.score += state.speed * dt * 2.2 * state.combo * oncomingBonus;
 
@@ -3352,6 +3636,22 @@
               if (state.comboTimer <= 0) {
                 state.combo = 1.0;
               }
+            }
+          } else if (state.mode === 'CRASHED' && !isPaused) {
+            // Slow-motion impact: car brakes hard, shakes, then the CRASHED panel appears
+            state.crashT += rawDt;
+            state.speed *= Math.exp(-dt * 9);
+            if (state.speed < 0.15) state.speed = 0;
+            state.playerVx *= Math.exp(-dt * 6);
+            state.playerX += state.playerVx * dt;
+            state.steerAngle *= Math.exp(-dt * 6);
+            state.rpm += (900 - state.rpm) * Math.min(1, dt * 6);
+            state.shake = Math.max(0, 1 - state.crashT / 1.8);
+            if (state.crashCar) state.crashCar.speed = state.speed;
+            if (!state.crashShown && state.crashT > 1.7) {
+              state.crashShown = true;
+              ui.overlayCrash.classList.remove('hidden');
+              ui.overlayCrash.classList.add('flex');
             }
           } else if (state.mode === 'START') {
             // Subtle idle preview cruise on title screen
@@ -3416,20 +3716,25 @@
           leftBeamCone.position.x = state.playerX - 0.72;
           rightBeamCone.position.x = state.playerX + 0.72;
 
-          cockpitGroup.position.x = state.playerX;
+          const shk = state.shake > 0 ? state.shake * state.shake : 0;
+          const shX = shk ? (Math.random() - 0.5) * 0.16 * shk : 0;
+          const shY = shk ? (Math.random() - 0.5) * 0.12 * shk : 0;
+          const shR = shk ? (Math.random() - 0.5) * shk : 0;
+          cockpitGroup.position.x = state.playerX + shX;
+          cockpitGroup.position.y = shY;
           cockpitGroup.rotation.z = -state.playerVx * 0.0038;
-          steeringGroup.rotation.z = -state.steerAngle * 0.55;
+          steeringGroup.rotation.z = state.steerAngle * 0.55;
           hornBtnMesh.material.color.setHex(state.hornPressed ? 0xfbbf24 : 0x38bdf8);
 
           camera.position.set(
-            state.playerX + state.playerVx * 0.004,
-            CABIN_EYE_Y + Math.sin(now * 0.05) * 0.002 * Math.min(1, state.speed / 30),
+            state.playerX + state.playerVx * 0.004 + shX,
+            CABIN_EYE_Y + shY + Math.sin(now * 0.05) * 0.002 * Math.min(1, state.speed / 30),
             CABIN_EYE_Z
           );
           camera.rotation.order = 'YXZ';
-          camera.rotation.y = lookYaw - state.playerVx * 0.005;
-          camera.rotation.x = lookPitch;
-          camera.rotation.z = -state.playerVx * 0.0032;
+          camera.rotation.y = lookYaw - state.playerVx * 0.005 + shR * 0.05;
+          camera.rotation.x = lookPitch + shR * 0.04;
+          camera.rotation.z = -state.playerVx * 0.0032 + shR * 0.08;
 
           // 4. Update Windshield Wipers & Rain Streaks
           let wiperAngle = 0;
@@ -3463,6 +3768,7 @@
             if (car.headFlashTimer > 0) {
               car.headFlashTimer = Math.max(0, car.headFlashTimer - rawDt);
             }
+            if (car.bumpCd > 0) car.bumpCd -= rawDt;
 
             const tailScale = car.brakeFlashTimer > 0 ? 3.4 : 2.2;
             car.leftTailSprite.scale.set(tailScale, tailScale * 0.64, 1);
@@ -3505,7 +3811,21 @@
 
               // Collision Detection
               if (dz < hitHalfL && dx < hitHalfW) {
-                triggerCrash();
+                // A same-direction car whose centre is behind us = we were hit from behind: shove, no game over
+                const hitFromBehind = !car.isOncoming && car.mesh.position.z > 0.4;
+                if (hitFromBehind) {
+                  if (!(car.bumpCd > 0)) {
+                    const closing = Math.max(0, car.speed - state.speed);
+                    state.speed = Math.min(68, state.speed + closing * 0.55 + 1.5);
+                    car.speed = Math.max(6, state.speed * 0.85);
+                    car.bumpCd = 0.8;
+                    state.shake = Math.max(state.shake, 0.5);
+                    audioEngine.playShiftClunk();
+                    showToast('REAR-ENDED!', 'text-amber-300 border-amber-400/40');
+                  }
+                } else {
+                  triggerCrash(car);
+                }
               }
             }
 
@@ -3516,7 +3836,7 @@
 
           // 6. Update Digital Dashboard Cluster & HUD Elements
           const kmhDisplay = Math.round(state.speed * 3.6);
-          if (frameCounter % 2 === 0) {
+          if (frameCounter % qualityCfg.clusterEvery === 0) {
             drawInstrumentCluster(
               kmhDisplay,
               state.rpm,
@@ -3541,7 +3861,7 @@
           }
 
           // 7. Render Live Cockpit Mirrors & Main Viewport
-          if (frameCounter % 2 === 0) {
+          if (frameCounter % qualityCfg.mirrorEvery === 0) {
             updateCockpitMirrors();
           }
           renderer.render(scene, camera);
