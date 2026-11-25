@@ -217,7 +217,7 @@
         <span class="font-mono-num text-[10px] text-amber-300/90">[H]</span>
       </button>
 
-      <button id="btn-lights" type="button" title="Toggle High-Beam Flash (F)"
+      <button id="btn-lights" type="button" title="Cycle Headlights: OFF / LOW / HIGH (F)"
         class="w-8 h-8 md:w-auto md:h-auto flex items-center justify-center md:gap-1.5 md:px-2.5 md:py-1.5 rounded-lg md:rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium text-slate-200 transition cursor-pointer active:scale-90">
         <svg id="icon-lights" class="w-4 h-4 text-sky-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M9 18h6M10 22h4M12 2v2M4.93 4.93l1.41 1.41M2 12h2M20 12h2M17.66 6.34l1.41-1.41M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
@@ -344,7 +344,7 @@
       <div class="mt-4 pt-3.5 border-t border-white/10 grid grid-cols-2 gap-2 text-[11px] text-slate-400 text-left">
         <div><span class="text-slate-200 font-semibold">W / S</span> — Gas &amp; Brake</div>
         <div><span class="text-slate-200 font-semibold">A / D</span> — Steer &amp; Drift</div>
-        <div><span class="text-slate-200 font-semibold">F</span> — High-Beam Flash</div>
+        <div><span class="text-slate-200 font-semibold">F</span> — Lights (OFF / LOW / HIGH)</div>
         <div><span class="text-slate-200 font-semibold">H</span> — Dual Horn + Flash</div>
         <div><span class="text-slate-200 font-semibold">V</span> — Wiper Speed</div>
         <div><span class="text-slate-200 font-semibold">Lanes 1–2</span> — Oncoming Traffic</div>
@@ -421,6 +421,61 @@
           <button type="button" data-quality="low" class="quality-btn py-2 rounded-xl border text-xs font-bold tracking-wider transition cursor-pointer">LOW</button>
           <button type="button" data-quality="medium" class="quality-btn py-2 rounded-xl border text-xs font-bold tracking-wider transition cursor-pointer">MEDIUM</button>
           <button type="button" data-quality="high" class="quality-btn py-2 rounded-xl border text-xs font-bold tracking-wider transition cursor-pointer">HIGH</button>
+        </div>
+      </div>
+
+      <!-- Independent Audio Mixer (Car Audio Player vs Engine & SFX) -->
+      <div class="border-t border-white/10 pt-3.5 flex flex-col gap-3">
+        <div class="text-xs font-bold text-slate-200">Audio Mixer</div>
+
+        <!-- Car Audio / MP3 Player Channel -->
+        <div class="bg-white/5 border border-white/10 rounded-2xl p-2.5 flex flex-col gap-1.5">
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <button id="btn-mute-music" type="button" title="Mute / Unmute Car Audio Player"
+                class="p-1.5 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 border border-sky-400/30 text-sky-300 transition cursor-pointer">
+                <svg id="icon-music-unmuted" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9 18V5l12-2v13"/>
+                  <circle cx="6" cy="18" r="3"/>
+                  <circle cx="18" cy="16" r="3"/>
+                </svg>
+                <svg id="icon-music-muted" class="w-4 h-4 hidden text-rose-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="2" y1="2" x2="22" y2="22"/>
+                  <path d="M9 18V5l12-2v13"/>
+                  <circle cx="6" cy="18" r="3"/>
+                </svg>
+              </button>
+              <span class="text-xs font-semibold text-slate-200">Car Audio Player</span>
+            </div>
+            <span id="val-music-vol" class="font-mono-num text-xs font-bold text-sky-300">85%</span>
+          </div>
+          <input id="slider-music-vol" type="range" min="0" max="100" value="85"
+            class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-sky-400" />
+        </div>
+
+        <!-- Engine, Rain, Horn & Crash SFX Channel -->
+        <div class="bg-white/5 border border-white/10 rounded-2xl p-2.5 flex flex-col gap-1.5">
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <button id="btn-mute-sfx" type="button" title="Mute / Unmute Engine & SFX"
+                class="p-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-400/30 text-emerald-300 transition cursor-pointer">
+                <svg id="icon-sfx-unmuted" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                  <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+                </svg>
+                <svg id="icon-sfx-muted" class="w-4 h-4 hidden text-rose-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                  <line x1="23" y1="9" x2="17" y2="15"/>
+                  <line x1="17" y1="9" x2="23" y2="15"/>
+                </svg>
+              </button>
+              <span class="text-xs font-semibold text-slate-200">Engine &amp; Road SFX</span>
+            </div>
+            <span id="val-sfx-vol" class="font-mono-num text-xs font-bold text-emerald-300">85%</span>
+          </div>
+          <input id="slider-sfx-vol" type="range" min="0" max="100" value="85"
+            class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-400" />
         </div>
       </div>
 
@@ -536,7 +591,7 @@
 
           this.ctx = new AudioCtx();
           this.masterGain = this.ctx.createGain();
-          this.masterGain.gain.value = 0.85;
+          this.masterGain.gain.value = audioMixer.sfxMuted ? 0 : audioMixer.sfxVolume;
           this.masterGain.connect(this.ctx.destination);
 
           const sampleRate = this.ctx.sampleRate;
@@ -779,12 +834,12 @@
           }
 
           const now = this.ctx.currentTime;
-          if (isPaused) {
+          if (isPaused || audioMixer.sfxMuted || audioMixer.sfxVolume <= 0.001) {
             this.engineGain.gain.setTargetAtTime(0.0, now, 0.08);
             this.tireGain.gain.setTargetAtTime(0.0, now, 0.08);
             this.intakeGain.gain.setTargetAtTime(0.0, now, 0.08);
             this.turboGain.gain.setTargetAtTime(0.0, now, 0.08);
-            this.rainGain.gain.setTargetAtTime(0.04, now, 0.1);
+            this.rainGain.gain.setTargetAtTime((audioMixer.sfxMuted || audioMixer.sfxVolume <= 0.001) ? 0.0 : 0.04, now, 0.1);
             return;
           }
 
@@ -952,7 +1007,7 @@
         nearMissCount: 0,
         wiperMode: 1,
         wiperPhase: 0,
-        highBeams: false,
+        lightMode: 1, // 0 = OFF, 1 = LOW BEAM, 2 = HIGH BEAM
         hornPressed: false,
         dipperFlashTimer: 0,
         slowMoTimer: 0,
@@ -1010,6 +1065,60 @@
       };
 
       // =========================================================================
+      // INDEPENDENT AUDIO MIXER (CAR AUDIO PLAYER VS ENGINE & SFX)
+      // =========================================================================
+      const audioMixer = {
+        musicVolume: 0.85,
+        musicMuted: false,
+        sfxVolume: 0.85,
+        sfxMuted: false
+      };
+      try {
+        const savedMix = JSON.parse(localStorage.getItem('mrhs_audio_mixer') || 'null');
+        if (savedMix) {
+          if (typeof savedMix.musicVolume === 'number') audioMixer.musicVolume = Math.max(0, Math.min(1, savedMix.musicVolume));
+          if (typeof savedMix.musicMuted === 'boolean') audioMixer.musicMuted = savedMix.musicMuted;
+          if (typeof savedMix.sfxVolume === 'number') audioMixer.sfxVolume = Math.max(0, Math.min(1, savedMix.sfxVolume));
+          if (typeof savedMix.sfxMuted === 'boolean') audioMixer.sfxMuted = savedMix.sfxMuted;
+        }
+      } catch (e) {}
+
+      function applyAudioMixer() {
+        mp3State.player.volume = audioMixer.musicMuted ? 0 : audioMixer.musicVolume;
+        mp3State.player.muted = audioMixer.musicMuted;
+        if (audioEngine.masterGain && audioEngine.ctx) {
+          const targetSfx = audioMixer.sfxMuted ? 0 : audioMixer.sfxVolume;
+          audioEngine.masterGain.gain.setTargetAtTime(targetSfx, audioEngine.ctx.currentTime, 0.03);
+        }
+
+        const sliderMusic = document.getElementById('slider-music-vol');
+        const valMusic = document.getElementById('val-music-vol');
+        const iconMusicUnmuted = document.getElementById('icon-music-unmuted');
+        const iconMusicMuted = document.getElementById('icon-music-muted');
+        if (sliderMusic) sliderMusic.value = String(Math.round(audioMixer.musicVolume * 100));
+        if (valMusic) valMusic.textContent = audioMixer.musicMuted ? 'MUTED' : `${Math.round(audioMixer.musicVolume * 100)}%`;
+        if (iconMusicUnmuted && iconMusicMuted) {
+          iconMusicUnmuted.classList.toggle('hidden', audioMixer.musicMuted || audioMixer.musicVolume === 0);
+          iconMusicMuted.classList.toggle('hidden', !audioMixer.musicMuted && audioMixer.musicVolume > 0);
+        }
+
+        const sliderSfx = document.getElementById('slider-sfx-vol');
+        const valSfx = document.getElementById('val-sfx-vol');
+        const iconSfxUnmuted = document.getElementById('icon-sfx-unmuted');
+        const iconSfxMuted = document.getElementById('icon-sfx-muted');
+        if (sliderSfx) sliderSfx.value = String(Math.round(audioMixer.sfxVolume * 100));
+        if (valSfx) valSfx.textContent = audioMixer.sfxMuted ? 'MUTED' : `${Math.round(audioMixer.sfxVolume * 100)}%`;
+        if (iconSfxUnmuted && iconSfxMuted) {
+          iconSfxUnmuted.classList.toggle('hidden', audioMixer.sfxMuted || audioMixer.sfxVolume === 0);
+          iconSfxMuted.classList.toggle('hidden', !audioMixer.sfxMuted && audioMixer.sfxVolume > 0);
+        }
+
+        try {
+          localStorage.setItem('mrhs_audio_mixer', JSON.stringify(audioMixer));
+        } catch (e) {}
+      }
+
+      // =========================================================================
       // CAR STEREO MP3 PLAYLIST ENGINE (INDEXEDDB PERSISTENCE + AUTO-ADVANCE)
       // =========================================================================
       const mp3State = {
@@ -1022,55 +1131,55 @@
         player: new Audio()
       };
       mp3State.player.preload = 'auto';
+      applyAudioMixer();
 
       const Mp3Store = {
-        dbName: 'MidnightRainCarAudioDB',
-        storeName: 'tracks',
+        dbName: 'DarkRainDriveDB',
+        storeName: 'playlist',
         open() {
-          return new Promise((resolve, reject) => {
-            if (!window.indexedDB) return reject(new Error('IndexedDB unavailable'));
-            const req = indexedDB.open(this.dbName, 1);
-            req.onupgradeneeded = (e) => {
-              const db = e.target.result;
-              if (!db.objectStoreNames.contains(this.storeName)) {
-                db.createObjectStore(this.storeName, { keyPath: 'order' });
-              }
-            };
-            req.onsuccess = () => resolve(req.result);
-            req.onerror = () => reject(req.error);
+          return new Promise((resolve) => {
+            try {
+              const req = indexedDB.open(this.dbName, 1);
+              req.onupgradeneeded = (e) => {
+                const db = e.target.result;
+                if (!db.objectStoreNames.contains(this.storeName)) {
+                  db.createObjectStore(this.storeName);
+                }
+              };
+              req.onsuccess = (e) => resolve(e.target.result);
+              req.onerror = () => resolve(null);
+            } catch (e) {
+              resolve(null);
+            }
           });
         },
         async loadAll() {
-          try {
-            const db = await this.open();
-            return await new Promise((resolve) => {
+          const db = await this.open();
+          if (!db) return [];
+          return new Promise((resolve) => {
+            try {
               const tx = db.transaction(this.storeName, 'readonly');
-              const store = tx.objectStore(this.storeName);
-              const req = store.getAll();
-              req.onsuccess = () => {
-                const rows = (req.result || []).sort((a, b) => a.order - b.order);
-                resolve(rows.map((r) => ({ id: r.id, name: r.name, blob: r.blob })));
-              };
+              const req = tx.objectStore(this.storeName).get('tracks');
+              req.onsuccess = () => resolve(Array.isArray(req.result) ? req.result : []);
               req.onerror = () => resolve([]);
-            });
-          } catch (e) {
-            return [];
-          }
+            } catch (e) {
+              resolve([]);
+            }
+          });
         },
         async saveAll(tracks) {
-          try {
-            const db = await this.open();
-            await new Promise((resolve, reject) => {
+          const db = await this.open();
+          if (!db) return;
+          return new Promise((resolve) => {
+            try {
               const tx = db.transaction(this.storeName, 'readwrite');
-              const store = tx.objectStore(this.storeName);
-              store.clear();
-              tracks.forEach((t, idx) => {
-                store.put({ order: idx, id: t.id, name: t.name, blob: t.blob });
-              });
+              tx.objectStore(this.storeName).put(tracks, 'tracks');
               tx.oncomplete = () => resolve();
-              tx.onerror = () => reject(tx.error);
-            });
-          } catch (e) {}
+              tx.onerror = () => resolve();
+            } catch (e) {
+              resolve();
+            }
+          });
         }
       };
 
@@ -1273,11 +1382,11 @@
             m.lookAt(0, 0, 0);
             envScene.add(m);
           };
-          panel(26, 6, 0xffa347, 2.2, -42, 5, -30);   // sodium haze on the left horizon
-          panel(10, 3, 0xdfeaff, 5.0, 36, 6, -38);    // distant oncoming headlights on the right
-          panel(40, 5, 0xbcd4ff, 0.9, 0, 46, -10);    // faint overhead sky strip
-          panel(18, 3, 0xff3b30, 1.6, 0, 4, 48);      // tail-light glow behind
-          panel(60, 60, 0x1a2434, 0.35, 0, 56, 0);    // soft overhead fill
+          panel(26, 6, 0xffa347, 0.35, -42, 5, -30);   // faint horizon warmth
+          panel(10, 3, 0xdfeaff, 0.65, 36, 6, -38);    // distant headlights
+          panel(40, 5, 0xbcd4ff, 0.14, 0, 46, -10);    // dark overcast sky
+          panel(18, 3, 0xff3b30, 0.28, 0, 4, 48);      // faint rear glow
+          panel(60, 60, 0x0a0f18, 0.08, 0, 56, 0);     // pitch-black night zenith
           const pmrem = new THREE.PMREMGenerator(renderer);
           const envRT = pmrem.fromScene(envScene, 0.015);
           scene.environment = envRT.texture;
@@ -1291,13 +1400,16 @@
         }
       })();
 
-      const cabinAmbient = new THREE.AmbientLight(0x162238, 0.95);
+      const cabinAmbient = new THREE.AmbientLight(0x121c30, 0.22);
       scene.add(cabinAmbient);
+
+      const nightSkyHemi = new THREE.HemisphereLight(0x283c63, 0x080c14, 0.24);
+      scene.add(nightSkyHemi);
 
       // Cabin lights: low orange console/footwell glow + weak cool glow from the screen.
       // They are attached to the cockpit later (section 7) so they follow the car, and nothing glows near the roof.
-      const dashBacklight = new THREE.PointLight(0xff8a1a, 0.5, 1.8, 1.6);
-      const cabinAmbientGlow = new THREE.PointLight(0x7dc4ff, 0.22, 1.3, 1.8);
+      const dashBacklight = new THREE.PointLight(0xff8a1a, 0.42, 1.5, 1.8);
+      const cabinAmbientGlow = new THREE.PointLight(0x7dc4ff, 0.16, 1.1, 2.0);
 
       // =========================================================================
       // 4. PROCEDURAL TEXTURES (WET ASPHALT, PUDDLES, LIGHT GLOWS)
@@ -1459,14 +1571,14 @@
         uTime: { value: 0 },
         uScroll: { value: 0 },
         uPlayerX: { value: 1.8 },
-        uHighBeam: { value: 0.0 }
+        uBeamPower: { value: 1.0 }
       };
 
       roadMat.onBeforeCompile = (shader) => {
         shader.uniforms.uTime = roadShaderUniforms.uTime;
         shader.uniforms.uScroll = roadShaderUniforms.uScroll;
         shader.uniforms.uPlayerX = roadShaderUniforms.uPlayerX;
-        shader.uniforms.uHighBeam = roadShaderUniforms.uHighBeam;
+        shader.uniforms.uBeamPower = roadShaderUniforms.uBeamPower;
 
         shader.vertexShader = shader.vertexShader
           .replace('#include <common>', `#include <common>\nvarying vec3 vWorldPos;`)
@@ -1479,7 +1591,7 @@
             uniform float uTime;
             uniform float uScroll;
             uniform float uPlayerX;
-            uniform float uHighBeam;
+            uniform float uBeamPower;
             float hash21(vec2 p) {
               p = fract(p * vec2(123.34, 456.21));
               p += dot(p, p + 45.32);
@@ -1489,21 +1601,23 @@
           .replace('#include <dithering_fragment>', `
             float distAhead = max(0.0, -vWorldPos.z);
             float dx = vWorldPos.x - uPlayerX;
-            float beamMaxDist = mix(52.0, 118.0, uHighBeam);
-            float coneHalfW = 1.6 + distAhead * mix(0.24, 0.34, uHighBeam);
-            float inBeam = smoothstep(coneHalfW + 1.8, coneHalfW - 0.8, abs(dx)) * smoothstep(beamMaxDist, 6.0, distAhead);
+            float beamActive = smoothstep(0.01, 0.15, uBeamPower);
+            float highMix = clamp(uBeamPower - 1.0, 0.0, 1.0);
+            float beamMaxDist = mix(52.0, 118.0, highMix);
+            float coneHalfW = 1.6 + distAhead * mix(0.24, 0.34, highMix);
+            float inBeam = beamActive * smoothstep(coneHalfW + 1.8, coneHalfW - 0.8, abs(dx)) * smoothstep(beamMaxDist, 6.0, distAhead);
 
-            float hotSpot = exp(-pow(dx * 0.55, 2.0)) * smoothstep(42.0, 4.0, distAhead);
+            float hotSpot = beamActive * exp(-pow(dx * 0.55, 2.0)) * smoothstep(42.0, 4.0, distAhead);
             vec2 puddleCell = floor(vec2(vWorldPos.x * 3.8, (vWorldPos.z - uScroll) * 1.4));
             float ripple = sin(uTime * 16.0 + hash21(puddleCell) * 62.83);
             float wetGlint = step(0.92, hash21(puddleCell + 3.1)) * max(0.0, ripple) * inBeam;
 
-            gl_FragColor.rgb += vec3(0.72, 0.84, 1.0) * (wetGlint * 0.28 + hotSpot * mix(0.06, 0.14, uHighBeam));
+            gl_FragColor.rgb += vec3(0.72, 0.84, 1.0) * (wetGlint * 0.26 + hotSpot * mix(0.055, 0.14, highMix));
             #include <dithering_fragment>
           `);
       };
 
-      roadMat.envMapIntensity = 0.3; // keep the unlit road dark, only a faint wet sheen
+      roadMat.envMapIntensity = 0.26; // subtle moonlit sky reflection on wet asphalt so road & lanes stay visible without headlights
       const roadMesh = new THREE.Mesh(roadGeo, roadMat);
       roadMesh.rotation.x = -Math.PI / 2;
       roadMesh.position.set(0, 0, -165);
@@ -2255,29 +2369,44 @@
       const wsCtx = wsCanvas.getContext('2d');
       const wsTex = new THREE.CanvasTexture(wsCanvas);
 
+      // Curved windshield glass geometry fitted strictly inside the A-pillars, roof header, and dash cowl
+      const wsGeo = new THREE.PlaneGeometry(1.42, 0.64, 16, 4);
+      const wsPos = wsGeo.attributes.position;
+      for (let i = 0; i < wsPos.count; i++) {
+        const px = wsPos.getX(i);
+        const py = wsPos.getY(i);
+        // Subtle aerodynamic wrap-around curve toward the A-pillars & slight top taper
+        const normX = px / 0.71;
+        const normY = (py + 0.32) / 0.64;
+        wsPos.setX(i, px * (1.0 - 0.04 * normY));
+        wsPos.setZ(i, -0.045 * normX * normX);
+      }
+      wsGeo.computeVertexNormals();
+
       const windshieldMesh = new THREE.Mesh(
-        new THREE.PlaneGeometry(1.48, 0.78),
+        wsGeo,
         new THREE.MeshBasicMaterial({
           map: wsTex,
           transparent: true,
-          opacity: 0.48,
-          blending: THREE.AdditiveBlending,
-          depthWrite: false
+          opacity: 0.42,
+          depthWrite: false,
+          depthTest: true
         })
       );
-      windshieldMesh.position.set(0.36, 1.28, -0.46);
-      windshieldMesh.rotation.x = -0.64;
+      // Positioned cleanly along the slanted windshield opening (from dash cowl x=1.08,y=1.03 to roof x=0.25,y=1.47)
+      windshieldMesh.position.set(0.36, 1.255, -0.665);
+      windshieldMesh.rotation.x = -1.08;
       cockpitGroup.add(windshieldMesh);
 
       const wsDroplets = [];
       const dropletCount = state.isTouchDevice ? 95 : 160;
       for (let i = 0; i < dropletCount; i++) {
         wsDroplets.push({
-          x: Math.random() * 512,
-          y: Math.random() * 256,
-          r: 1.1 + Math.random() * 2.1,
+          x: 18 + Math.random() * 476,
+          y: 12 + Math.random() * 232,
+          r: 1.0 + Math.random() * 1.8,
           vy: 14 + Math.random() * 24,
-          alpha: 0.2 + Math.random() * 0.55
+          alpha: 0.18 + Math.random() * 0.45
         });
       }
 
@@ -2285,25 +2414,19 @@
         const ctx = wsCtx;
         ctx.clearRect(0, 0, 512, 256);
 
-        const edgeGrad = ctx.createRadialGradient(256, 128, 130, 256, 128, 280);
-        edgeGrad.addColorStop(0.0, 'rgba(148, 197, 255, 0.0)');
-        edgeGrad.addColorStop(1.0, 'rgba(148, 197, 255, 0.14)');
-        ctx.fillStyle = edgeGrad;
-        ctx.fillRect(0, 0, 512, 256);
-
         for (let i = 0; i < wsDroplets.length; i++) {
           const d = wsDroplets[i];
           if (dt > 0) {
             const windPush = state.speed > 26 ? -(state.speed - 24) * 0.9 : d.vy;
             d.y += windPush * dt;
             d.x += (Math.random() - 0.5) * 8 * dt;
-            if (d.y > 256) { d.y = 0; d.x = Math.random() * 512; }
-            if (d.y < 0) { d.y = 256; d.x = Math.random() * 512; }
+            if (d.y > 244) { d.y = 12; d.x = 18 + Math.random() * 476; }
+            if (d.y < 12) { d.y = 244; d.x = 18 + Math.random() * 476; }
           }
 
-          ctx.fillStyle = `rgba(210, 232, 255, ${d.alpha})`;
+          ctx.fillStyle = `rgba(185, 212, 242, ${d.alpha})`;
           ctx.beginPath();
-          ctx.ellipse(d.x, d.y, d.r * 0.75, d.r * 1.45, 0, 0, Math.PI * 2);
+          ctx.ellipse(d.x, d.y, d.r * 0.7, d.r * 1.35, 0, 0, Math.PI * 2);
           ctx.fill();
         }
 
@@ -2339,7 +2462,7 @@
       for (let i = 0; i < RAIN_COUNT; i++) {
         const x = (Math.random() - 0.5) * 24;
         const y = Math.random() * 9.5;
-        const z = -1.5 - Math.random() * 68;
+        const z = -2.2 - Math.random() * 68;
         rainVelocities[i] = 18 + Math.random() * 9;
 
         const idx = i * 6;
@@ -2368,7 +2491,8 @@
       function updateRain(dt) {
         const pos = rainGeo.attributes.position.array;
         const col = rainGeo.attributes.color.array;
-        const beamRange = (state.highBeams || state.hornPressed || state.dipperFlashTimer > 0) ? 72 : 42;
+        const activeLightMode = (state.hornPressed || state.dipperFlashTimer > 0) ? 2 : state.lightMode;
+        const beamRange = activeLightMode === 2 ? 72 : (activeLightMode === 1 ? 42 : 0);
 
         for (let i = 0; i < rainActive; i++) {
           const idx = i * 6;
@@ -2379,10 +2503,10 @@
           if (dt > 0) {
             y -= rainVelocities[i] * dt;
             z += (state.speed * 1.18 + 4.0) * dt;
-            if (y < 0.05 || z > -0.8) {
+            if (y < 0.05 || z > -1.8) {
               x = state.playerX + (Math.random() - 0.5) * 22;
               y = 4.5 + Math.random() * 6.0;
-              z = -3.0 - Math.random() * 66;
+              z = -3.2 - Math.random() * 66;
             }
           }
 
@@ -2400,7 +2524,7 @@
           const coneHalfW = 1.2 + distZ * 0.24;
           const dx = Math.abs(x - state.playerX);
           let lit = 0.0;
-          if (distZ < beamRange && dx < coneHalfW && y < 2.2 + distZ * 0.09) {
+          if (beamRange > 0 && distZ < beamRange && dx < coneHalfW && y < 2.2 + distZ * 0.09) {
             const zFade = 1.0 - distZ / beamRange;
             const xFade = 1.0 - dx / coneHalfW;
             lit = Math.min(1.0, zFade * xFade * 1.45);
@@ -2475,53 +2599,53 @@
 
       function attachHighwayLightsAndSpray(group, width, length, headY, tailY, isOncoming) {
         const leftTailSprite = new THREE.Sprite(
-          new THREE.SpriteMaterial({ map: redGlowTex, color: 0xff2a2a, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })
+          new THREE.SpriteMaterial({ map: redGlowTex, color: 0xff2a2a, transparent: true, opacity: 0.72, blending: THREE.AdditiveBlending, depthWrite: false })
         );
-        leftTailSprite.scale.set(2.2, 1.4, 1);
+        leftTailSprite.scale.set(1.35, 0.88, 1);
         leftTailSprite.position.set(-width * 0.34, tailY, length * 0.5 + 0.08);
         group.add(leftTailSprite);
 
         const rightTailSprite = new THREE.Sprite(
-          new THREE.SpriteMaterial({ map: redGlowTex, color: 0xff2a2a, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })
+          new THREE.SpriteMaterial({ map: redGlowTex, color: 0xff2a2a, transparent: true, opacity: 0.72, blending: THREE.AdditiveBlending, depthWrite: false })
         );
-        rightTailSprite.scale.set(2.2, 1.4, 1);
+        rightTailSprite.scale.set(1.35, 0.88, 1);
         rightTailSprite.position.set(width * 0.34, tailY, length * 0.5 + 0.08);
         group.add(rightTailSprite);
 
         const redStreak = new THREE.Mesh(
-          new THREE.PlaneGeometry(width * 1.15, 11.5),
-          new THREE.MeshBasicMaterial({ map: redStreakTex, transparent: true, opacity: 0.48, blending: THREE.AdditiveBlending, depthWrite: false })
+          new THREE.PlaneGeometry(width * 0.95, 7.5),
+          new THREE.MeshBasicMaterial({ map: redStreakTex, transparent: true, opacity: 0.24, blending: THREE.AdditiveBlending, depthWrite: false })
         );
         redStreak.rotation.x = -Math.PI / 2;
-        redStreak.position.set(0, 0.02, length * 0.5 + 5.8);
+        redStreak.position.set(0, 0.02, length * 0.5 + 3.8);
         group.add(redStreak);
 
         const leftHeadSprite = new THREE.Sprite(
-          new THREE.SpriteMaterial({ map: whiteHeadlightGlowTex, color: 0xe6f2ff, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })
+          new THREE.SpriteMaterial({ map: whiteHeadlightGlowTex, color: 0xe6f2ff, transparent: true, opacity: isOncoming ? 0.75 : 0.45, blending: THREE.AdditiveBlending, depthWrite: false })
         );
-        leftHeadSprite.scale.set(isOncoming ? 3.9 : 2.2, isOncoming ? 2.5 : 1.4, 1);
+        leftHeadSprite.scale.set(isOncoming ? 2.15 : 1.35, isOncoming ? 1.4 : 0.88, 1);
         leftHeadSprite.position.set(-width * 0.34, headY, -length * 0.5 - 0.1);
         group.add(leftHeadSprite);
 
         const rightHeadSprite = new THREE.Sprite(
-          new THREE.SpriteMaterial({ map: whiteHeadlightGlowTex, color: 0xe6f2ff, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })
+          new THREE.SpriteMaterial({ map: whiteHeadlightGlowTex, color: 0xe6f2ff, transparent: true, opacity: isOncoming ? 0.75 : 0.45, blending: THREE.AdditiveBlending, depthWrite: false })
         );
-        rightHeadSprite.scale.set(isOncoming ? 3.9 : 2.2, isOncoming ? 2.5 : 1.4, 1);
+        rightHeadSprite.scale.set(isOncoming ? 2.15 : 1.35, isOncoming ? 1.4 : 0.88, 1);
         rightHeadSprite.position.set(width * 0.34, headY, -length * 0.5 - 0.1);
         group.add(rightHeadSprite);
 
         const headStreak = new THREE.Mesh(
-          new THREE.PlaneGeometry(width * 1.45, isOncoming ? 21.0 : 12.0),
+          new THREE.PlaneGeometry(width * 1.15, isOncoming ? 13.5 : 8.5),
           new THREE.MeshBasicMaterial({
             map: whiteStreakTex,
             transparent: true,
-            opacity: isOncoming ? 0.72 : 0.35,
+            opacity: isOncoming ? 0.36 : 0.18,
             blending: THREE.AdditiveBlending,
             depthWrite: false
           })
         );
         headStreak.rotation.x = -Math.PI / 2;
-        headStreak.position.set(0, 0.022, -length * 0.5 - (isOncoming ? 10.5 : 6.0));
+        headStreak.position.set(0, 0.022, -length * 0.5 - (isOncoming ? 6.8 : 4.2));
         group.add(headStreak);
 
         if (isOncoming) {
@@ -2551,8 +2675,10 @@
           isOncoming,
           leftTailSprite,
           rightTailSprite,
+          redStreak,
           leftHeadSprite,
           rightHeadSprite,
+          headStreak,
           spraySprites,
           brakeFlashTimer: 0,
           headFlashTimer: 0
@@ -3069,8 +3195,10 @@
         carObj.lane = laneIdx;
         carObj.leftTailSprite = built.leftTailSprite;
         carObj.rightTailSprite = built.rightTailSprite;
+        carObj.redStreak = built.redStreak;
         carObj.leftHeadSprite = built.leftHeadSprite;
         carObj.rightHeadSprite = built.rightHeadSprite;
+        carObj.headStreak = built.headStreak;
         carObj.spraySprites = built.spraySprites;
         carObj.brakeFlashTimer = 0;
         carObj.headFlashTimer = 0;
@@ -3271,23 +3399,30 @@
                 car.headFlashTimer = 0.65;
               } else {
                 car.brakeFlashTimer = 0.55;
-                if (car.lane === 2 && state.playerX > 0.2) {
-                  car.mesh.position.x = THREE.MathUtils.lerp(car.mesh.position.x, LANE_CENTERS[3], 0.25);
-                  car.lane = 3;
-                }
               }
             }
           }
         }
       }
 
-      function toggleHighBeams() {
-        state.highBeams = !state.highBeams;
-        ui.labelLights.textContent = state.highBeams ? 'HIGH [F]' : 'LOW [F]';
-        ui.labelLights.classList.toggle('text-amber-300', state.highBeams);
-        ui.labelLights.classList.toggle('text-sky-300', !state.highBeams);
-        ui.iconLights.classList.toggle('text-amber-300', state.highBeams);
-        ui.iconLights.classList.toggle('text-sky-300', !state.highBeams);
+      function cycleHeadlights() {
+        state.lightMode = (state.lightMode + 1) % 3;
+        const labels = ['OFF [F]', 'LOW [F]', 'HIGH [F]'];
+        ui.labelLights.textContent = labels[state.lightMode];
+
+        ui.labelLights.classList.remove('text-slate-400', 'text-sky-300', 'text-amber-300');
+        ui.iconLights.classList.remove('text-slate-400', 'text-sky-300', 'text-amber-300');
+
+        if (state.lightMode === 0) {
+          ui.labelLights.classList.add('text-slate-400');
+          ui.iconLights.classList.add('text-slate-400');
+        } else if (state.lightMode === 1) {
+          ui.labelLights.classList.add('text-sky-300');
+          ui.iconLights.classList.add('text-sky-300');
+        } else {
+          ui.labelLights.classList.add('text-amber-300');
+          ui.iconLights.classList.add('text-amber-300');
+        }
       }
 
       function cycleWiperMode() {
@@ -3390,7 +3525,7 @@
         if (e.code === 'Space') state.keys.brake = true;
 
         if (!e.repeat) {
-          if (k === 'f') toggleHighBeams();
+          if (k === 'f') cycleHeadlights();
           if (k === 'v') cycleWiperMode();
           if (k === 'h') triggerHorn(true);
           if (e.key === 'Escape') {
@@ -3440,18 +3575,44 @@
       // HUD & Modal Buttons
       document.getElementById('btn-start').addEventListener('click', startGame);
       document.getElementById('btn-retry').addEventListener('click', startGame);
-      document.getElementById('btn-lights').addEventListener('click', toggleHighBeams);
+      document.getElementById('btn-lights').addEventListener('click', cycleHeadlights);
       document.getElementById('btn-wipers').addEventListener('click', cycleWiperMode);
       document.getElementById('btn-settings').addEventListener('click', openSettingsModal);
       document.getElementById('btn-settings-close').addEventListener('click', closeSettingsModal);
       document.getElementById('btn-resume').addEventListener('click', closeSettingsModal);
       document.getElementById('btn-settings-restart').addEventListener('click', startGame);
 
-      const btnHorn = document.getElementById('btn-horn');
-      if (btnHorn) {
-        btnHorn.addEventListener('pointerdown', (e) => { e.preventDefault(); triggerHorn(true); });
-        btnHorn.addEventListener('pointerup', () => triggerHorn(false));
-        btnHorn.addEventListener('pointerleave', () => triggerHorn(false));
+      // Settings Audio Mixer Sliders & Mute Buttons
+      const sliderMusicVol = document.getElementById('slider-music-vol');
+      const btnMuteMusic = document.getElementById('btn-mute-music');
+      const sliderSfxVol = document.getElementById('slider-sfx-vol');
+      const btnMuteSfx = document.getElementById('btn-mute-sfx');
+
+      if (sliderMusicVol) {
+        sliderMusicVol.addEventListener('input', (e) => {
+          audioMixer.musicVolume = Math.max(0, Math.min(1, Number(e.target.value) / 100));
+          if (audioMixer.musicVolume > 0 && audioMixer.musicMuted) audioMixer.musicMuted = false;
+          applyAudioMixer();
+        });
+      }
+      if (btnMuteMusic) {
+        btnMuteMusic.addEventListener('click', () => {
+          audioMixer.musicMuted = !audioMixer.musicMuted;
+          applyAudioMixer();
+        });
+      }
+      if (sliderSfxVol) {
+        sliderSfxVol.addEventListener('input', (e) => {
+          audioMixer.sfxVolume = Math.max(0, Math.min(1, Number(e.target.value) / 100));
+          if (audioMixer.sfxVolume > 0 && audioMixer.sfxMuted) audioMixer.sfxMuted = false;
+          applyAudioMixer();
+        });
+      }
+      if (btnMuteSfx) {
+        btnMuteSfx.addEventListener('click', () => {
+          audioMixer.sfxMuted = !audioMixer.sfxMuted;
+          applyAudioMixer();
+        });
       }
 
       document.getElementById('btn-fullscreen').addEventListener('click', () => {
@@ -3645,15 +3806,16 @@
           if (state.dipperFlashTimer > 0) {
             state.dipperFlashTimer = Math.max(0, state.dipperFlashTimer - rawDt);
           }
-          const effectiveHighBeam = (state.highBeams || state.hornPressed || state.dipperFlashTimer > 0) ? 1.0 : 0.0;
+          const effectiveLightMode = (state.hornPressed || state.dipperFlashTimer > 0) ? 2 : state.lightMode;
+          const beamPower = effectiveLightMode === 2 ? 2.0 : (effectiveLightMode === 1 ? 1.0 : 0.0);
 
           roadShaderUniforms.uTime.value = now * 0.001;
           roadShaderUniforms.uScroll.value = state.roadScroll;
           roadShaderUniforms.uPlayerX.value = state.playerX;
-          roadShaderUniforms.uHighBeam.value = effectiveHighBeam;
+          roadShaderUniforms.uBeamPower.value = beamPower;
 
           const totalPropSpan = PROP_COUNT * PROP_SPACING;
-          const studBeamDist = effectiveHighBeam > 0.5 ? 115 : 58;
+          const studBeamDist = effectiveLightMode === 2 ? 115 : (effectiveLightMode === 1 ? 58 : 0);
           for (let i = 0; i < PROP_COUNT; i++) {
             const p = highwayProps[i];
             p.z += scrollDelta;
@@ -3667,7 +3829,9 @@
             p.laneStud.position.z = p.z;
 
             const distAhead = Math.max(0, -p.z);
-            const litAlpha = distAhead < studBeamDist ? Math.pow(1 - distAhead / studBeamDist, 1.4) * 0.9 : 0.04;
+            const litAlpha = (studBeamDist > 0 && distAhead < studBeamDist)
+              ? Math.pow(1 - distAhead / studBeamDist, 1.35) * 0.90
+              : Math.max(0.07, 0.22 * (1 - Math.min(1, distAhead / 95)));
             p.lRefMat.opacity = litAlpha;
             p.rRefMat.opacity = litAlpha;
             p.centerStudMat.opacity = litAlpha;
@@ -3684,12 +3848,35 @@
           leftBeamCone.position.x = state.playerX - 0.72 + state.steerAngle * 0.7;
           rightBeamCone.position.x = state.playerX + 0.72 + state.steerAngle * 0.7;
 
-          headlightLeft.intensity = effectiveHighBeam > 0.5 ? 11.5 : 6.8;
-          headlightRight.intensity = effectiveHighBeam > 0.5 ? 11.5 : 6.8;
-          headlightLeft.distance = effectiveHighBeam > 0.5 ? 210 : 145;
-          headlightRight.distance = effectiveHighBeam > 0.5 ? 210 : 145;
-          highBeamFarLight.intensity = effectiveHighBeam > 0.5 ? 4.4 : 0.0;
-          beamConeMat.opacity = effectiveHighBeam > 0.5 ? 0.34 : 0.22;
+          if (effectiveLightMode === 0) {
+            headlightLeft.intensity = 0.0;
+            headlightRight.intensity = 0.0;
+            headlightRoadFill.intensity = 0.0;
+            highBeamFarLight.intensity = 0.0;
+            beamConeMat.opacity = 0.0;
+            leftBeamCone.visible = false;
+            rightBeamCone.visible = false;
+          } else if (effectiveLightMode === 1) {
+            headlightLeft.intensity = 6.5;
+            headlightRight.intensity = 6.5;
+            headlightLeft.distance = 140;
+            headlightRight.distance = 140;
+            headlightRoadFill.intensity = 2.6;
+            highBeamFarLight.intensity = 0.0;
+            beamConeMat.opacity = 0.18;
+            leftBeamCone.visible = true;
+            rightBeamCone.visible = true;
+          } else {
+            headlightLeft.intensity = 11.5;
+            headlightRight.intensity = 11.5;
+            headlightLeft.distance = 210;
+            headlightRight.distance = 210;
+            headlightRoadFill.intensity = 3.2;
+            highBeamFarLight.intensity = 4.4;
+            beamConeMat.opacity = 0.30;
+            leftBeamCone.visible = true;
+            rightBeamCone.visible = true;
+          }
 
           if (state.shake > 0) {
             state.shake = Math.max(0, state.shake - rawDt * 2.6);
@@ -3759,16 +3946,34 @@
             }
             if (car.bumpCd > 0) car.bumpCd -= rawDt;
 
-            const tailScale = car.brakeFlashTimer > 0 ? 3.4 : 2.2;
+            // Distance-attenuated realistic automotive light bloom & wet road reflections
+            const distToPlayer = Math.max(1.0, Math.abs(car.mesh.position.z));
+            const distAtten = THREE.MathUtils.clamp(1.15 - distToPlayer / 210, 0.22, 1.0);
+
+            const tailScale = (car.brakeFlashTimer > 0 ? 2.25 : 1.35) * (0.65 + 0.35 * distAtten);
             car.leftTailSprite.scale.set(tailScale, tailScale * 0.64, 1);
             car.rightTailSprite.scale.set(tailScale, tailScale * 0.64, 1);
+            car.leftTailSprite.material.opacity = (car.brakeFlashTimer > 0 ? 0.95 : 0.72) * distAtten;
+            car.rightTailSprite.material.opacity = (car.brakeFlashTimer > 0 ? 0.95 : 0.72) * distAtten;
+            if (car.redStreak) {
+              car.redStreak.material.opacity = (car.brakeFlashTimer > 0 ? 0.38 : 0.22) * distAtten;
+            }
 
-            const headScale = car.headFlashTimer > 0 ? 5.6 : (car.isOncoming ? 3.9 : 2.2);
+            const baseHeadScale = car.isOncoming ? 2.15 : 1.35;
+            const headScale = (car.headFlashTimer > 0 ? 3.4 : baseHeadScale) * (0.65 + 0.35 * distAtten);
             car.leftHeadSprite.scale.set(headScale, headScale * 0.64, 1);
             car.rightHeadSprite.scale.set(headScale, headScale * 0.64, 1);
+            const headBaseOp = car.headFlashTimer > 0 ? 0.96 : (car.isOncoming ? 0.78 : 0.44);
+            car.leftHeadSprite.material.opacity = headBaseOp * distAtten;
+            car.rightHeadSprite.material.opacity = headBaseOp * distAtten;
+            if (car.headStreak) {
+              const streakBaseOp = car.headFlashTimer > 0 ? 0.56 : (car.isOncoming ? 0.36 : 0.16);
+              car.headStreak.material.opacity = streakBaseOp * distAtten;
+            }
 
             if (car.spraySprites) {
-              const sprayOp = Math.min(0.45, Math.abs(car.speed) * 0.015);
+              const sprayLitBoost = effectiveLightMode === 0 ? 0.18 : 1.0;
+              const sprayOp = Math.min(0.42, Math.abs(car.speed) * 0.014) * sprayLitBoost * distAtten;
               for (let s = 0; s < car.spraySprites.length; s++) {
                 car.spraySprites[s].material.opacity = sprayOp;
               }
@@ -3829,7 +4034,7 @@
               kmhDisplay,
               state.rpm,
               state.gear,
-              effectiveHighBeam > 0.5,
+              effectiveLightMode === 2,
               state.hornPressed
             );
           }
